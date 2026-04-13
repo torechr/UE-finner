@@ -149,7 +149,7 @@ module.exports = async (req, res) => {
       return res.json({ companies: parsed.sort((a, b) => (b.score || 0) - (a.score || 0)), source: "ai" });
     }
 
-    const top = companies.slice(0, 12);
+    const top = companies.slice(0, 25);
     const enriched = await Promise.all(top.map(async c => ({
       navn: c.navn, orgnr: c.organisasjonsnummer,
       kommune: c.forretningsadresse?.kommune || location,
