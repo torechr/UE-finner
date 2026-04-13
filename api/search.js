@@ -3,9 +3,9 @@ const Anthropic = require("@anthropic-ai/sdk");
 const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const NACE = {
-  lastebil: ["49.41", "49.42", "52.29"],
-  traktor:  ["01.61", "01.62", "01.63"],
-  graver:   ["43.12", "43.13", "42.11", "42.21"],
+  lastebil: ["49.41", "49.42", "52.29", "43.12", "08.11", "08.12"],
+  traktor:  ["01.61", "01.62", "01.11", "01.13", "01.41", "81.30", "43.12"],
+  graver:   ["43.12", "43.13", "42.11", "42.21", "41.20"],
 };
 
 // Kommune numbers for each location
