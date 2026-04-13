@@ -53,7 +53,7 @@ async function brregSearchByKommune(kommuneNr, naceCodes) {
   const results = [];
   for (const nace of naceCodes) {
     try {
-      const url = `https://data.brreg.no/enhetsregisteret/api/enheter?naeringskode=${nace}&kommunenummer=${kommuneNr}&size=50&konkurs=false&underAvvikling=false`;
+      const url = `https://data.brreg.no/enhetsregisteret/api/enheter?naeringskode=${nace}&kommunenummer=${kommuneNr}&size=50&konkurs=false&underAvvikling=false&organisasjonsform=AS,ENK,ANS,DA,SA,NUF,BA,STI,FLI`;
       const res = await fetch(url, {
         headers: { Accept: "application/json" },
         signal: AbortSignal.timeout(12000)
