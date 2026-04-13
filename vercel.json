@@ -7,6 +7,7 @@
   "routes": [
     { "src": "/api/search", "dest": "/api/search.js" },
     { "src": "/api/farmers", "dest": "/api/farmers.js" },
+    { "src": "/api/kommuner", "dest": "/api/kommuner.js" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "regions": ["arn1"]
