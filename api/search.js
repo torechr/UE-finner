@@ -158,20 +158,28 @@ module.exports = async (req, res) => {
       return res.json({ companies: parsed.sort((a, b) => (b.score || 0) - (a.score || 0)), source: "ai" });
     }
 
-    const top = companies.slice(0, 25);
-    const enriched = await Promise.all(top.map(async c => ({
-      navn: c.navn, orgnr: c.organisasjonsnummer,
-      kommune: c.forretningsadresse?.kommune || location,
-      nace: c.naeringskode1?.beskrivelse || "",
-      ansatte: c.antallAnsatte || 0,
-      stiftet: c.stiftelsesdato ? c.stiftelsesdato.slice(0, 4) : "",
-      organisasjonsform: c.organisasjonsform?.beskrivelse || "",
-      konkurs: await checkBankruptcy(c.organisasjonsnummer),
-    })));
+    const top = companies.slice(0, 50);
+    const enriched = await Promise.all(top.map(async c => {
+      const hasEmployees = (c.antallAnsatte || 0) > 0;
+      // Only do bankruptcy check for companies with employees (saves time)
+      const isBankrupt = hasEmployees ? await checkBankruptcy(c.organisasjonsnummer) : false;
+      return {
+        navn: c.navn, orgnr: c.organisasjonsnummer,
+        kommune: c.forretningsadresse?.kommune || location,
+        nace: c.naeringskode1?.beskrivelse || "",
+        ansatte: c.antallAnsatte || 0,
+        stiftet: c.stiftelsesdato ? c.stiftelsesdato.slice(0, 4) : "",
+        organisasjonsform: c.organisasjonsform?.beskrivelse || "",
+        konkurs: isBankrupt,
+      };
+    }));
 
     const active = enriched.filter(c => !c.konkurs);
     const bankrupt = enriched.filter(c => c.konkurs);
-    const scores = await scoreCompanies(active, equipment, location);
+
+    // AI-score top 15 by number of employees
+    const sortedForScoring = [...active].sort((a, b) => (b.ansatte || 0) - (a.ansatte || 0));
+    const scores = await scoreCompanies(sortedForScoring, equipment, location);
 
     const final = active.map(c => {
       const ai = scores.find(s => s.orgnr === c.orgnr) || {};
