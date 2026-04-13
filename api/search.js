@@ -116,15 +116,24 @@ function safeParseJSON(text) {
 async function scoreCompanies(active, equipment, location) {
   if (active.length === 0) return [];
   try {
-    const list = active.map(c => ({ orgnr: c.orgnr, navn: c.navn, nace: c.nace, ansatte: c.ansatte, stiftet: c.stiftet }));
+    // Send max 15 companies to avoid token limits
+    const list = active.slice(0, 15).map(c => ({
+      orgnr: c.orgnr, navn: c.navn, nace: c.nace,
+      ansatte: c.ansatte, stiftet: c.stiftet
+    }));
     const prompt = "Score these Norwegian companies as subcontractors for " + equipment + " in " + location + ". Reply ONLY with JSON array: " + JSON.stringify(list) + " Format: [{\"orgnr\":\"123\",\"score\":7,\"anbefaling\":\"Anbefalt\",\"begrunnelse\":\"Short reason in Norwegian\",\"risikoer\":[]}] anbefaling: Anbefalt(7-10), Mulig(4-6), Lav prioritet(1-3).";
     const msg = await client.messages.create({
-      model: "claude-sonnet-4-6", max_tokens: 1500,
+      model: "claude-sonnet-4-6", max_tokens: 2000,
       messages: [{ role: "user", content: prompt }],
     });
     const text = msg.content.filter(b => b.type === "text").map(b => b.text).join("");
-    return safeParseJSON(text);
-  } catch { return []; }
+    const scores = safeParseJSON(text);
+    // For remaining companies not scored, give default score
+    return scores;
+  } catch(e) {
+    console.log("Score error:", e.message);
+    return [];
+  }
 }
 
 module.exports = async (req, res) => {
