@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -13,7 +14,7 @@
     .header { background: linear-gradient(135deg,#161b22,#0d1117); border-bottom: 1px solid #30363d; padding: 18px 28px; display: flex; align-items: center; gap: 14px; }
     .logo { background: linear-gradient(135deg,#f97316,#ea580c); border-radius: 10px; padding: 7px 14px; font-weight: 800; font-size: 1rem; color: #fff; }
 
-    .wrap { max-width: 980px; margin: 0 auto; padding: 24px 16px; }
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 24px 16px; }
     .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 22px; margin-bottom: 20px; }
 
     label.lbl { display: block; font-size: 0.67rem; color: #8b949e; margin-bottom: 5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
@@ -26,9 +27,10 @@
     .btn-primary { border: none; border-radius: 8px; font-weight: 700; font-size: 0.92rem; padding: 10px 24px; background: linear-gradient(135deg,#f97316,#ea580c); color: #fff; cursor: pointer; font-family: inherit; }
     .btn-primary:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
     .btn-sec { background: #21262d; border: 1px solid #30363d; border-radius: 7px; padding: 6px 13px; color: #e6edf3; cursor: pointer; font-size: 0.78rem; font-weight: 600; font-family: inherit; }
-
     .tab-btn { padding: 8px 16px; border: 1px solid #30363d; border-radius: 7px; cursor: pointer; font-size: 0.82rem; font-weight: 600; background: #161b22; color: #8b949e; font-family: inherit; }
     .tab-btn.active { background: #f97316; border-color: #f97316; color: #fff; }
+    .fav-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 2px 6px; opacity: 0.5; transition: opacity 0.15s; }
+    .fav-btn.saved { opacity: 1; }
 
     .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
     .flex-sb { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
@@ -37,6 +39,7 @@
     .result-top { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 9px; }
     .result-meta { color: #8b949e; font-size: 0.76rem; line-height: 1.7; margin-top: 2px; }
     .result-nace { color: #6e7681; font-size: 0.71rem; }
+    .result-contact { color: #8b949e; font-size: 0.76rem; margin-top: 3px; }
     .result-ai { margin-top: 9px; padding-top: 9px; border-top: 1px solid #21262d; font-size: 0.8rem; }
 
     .badge { border-radius: 4px; padding: 2px 10px; font-weight: 700; font-size: 0.82rem; }
@@ -50,16 +53,18 @@
     .risks-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
 
     .loading { text-align: center; padding: 36px; }
-    .loading .icon { font-size: 2rem; margin-bottom: 10px; }
-    .loading .phase { color: #f97316; font-weight: 600; }
-    .loading .sub { color: #6e7681; font-size: 0.78rem; margin-top: 6px; }
-
     .error { background: #2d1010; border: 1px solid #7f1d1d; border-radius: 10px; padding: 16px; color: #f87171; }
     .info-bar { margin-top: 14px; padding: 13px; background: #161b22; border: 1px solid #30363d; border-radius: 9px; color: #6e7681; font-size: 0.73rem; line-height: 1.7; }
     .src-badge { border-radius: 4px; padding: 1px 7px; font-size: 0.7rem; font-weight: 600; border: 1px solid; margin-left: 6px; }
     .hint { margin-top: 10px; font-size: 0.75rem; color: #8b949e; background: #0d1117; border-radius: 6px; padding: 8px 12px; border: 1px solid #21262d; }
 
+    /* Favourites panel */
+    .fav-panel { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 14px 18px; margin-bottom: 9px; }
+    .fav-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #21262d; font-size: 0.85rem; }
+    .fav-item:last-child { border-bottom: none; }
+
     .hidden { display: none; }
+    .tabs-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
   </style>
 </head>
 <body>
@@ -70,30 +75,33 @@
     <div style="font-weight:700;font-size:1.15rem">SubFinder <span style="color:#f97316;font-size:0.72rem">v2</span></div>
     <div style="color:#8b949e;font-size:0.72rem">Underentreprenør-screener · Mesta AS · Brreg + Landbruksregisteret + Claude AI</div>
   </div>
+  <div style="margin-left:auto">
+    <button class="btn-sec" onclick="toggleFavPanel()">⭐ Favoritter (<span id="favCount">0</span>)</button>
+  </div>
 </div>
 
 <div class="wrap">
+
+  <!-- Favourites Panel -->
+  <div id="favPanel" class="hidden">
+    <div class="card">
+      <div style="font-weight:700;font-size:0.92rem;margin-bottom:14px;color:#f97316">⭐ Lagrede favoritter</div>
+      <div id="favList"><div style="color:#6e7681;font-size:0.85rem">Ingen favoritter lagret ennå.</div></div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn-sec" onclick="exportFavCSV()">📥 Eksporter CSV</button>
+        <button class="btn-sec" onclick="clearFavs()" style="color:#f87171">🗑️ Slett alle</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Search -->
   <div class="card">
     <div style="font-weight:700;font-size:0.92rem;margin-bottom:16px;color:#f97316">🔍 Søk etter underentreprenører</div>
     <div class="row">
-      <div style="flex:1 1 160px">
+      <div style="flex:1 1 200px">
         <label class="lbl">Kommune / Fylke</label>
         <select id="location" style="width:100%">
-          <option value="">Velg område...</option>
-          <optgroup label="Kommuner">
-            <option>Arendal</option><option>Bergen</option><option>Stavanger</option>
-            <option>Trondheim</option><option>Kristiansand</option><option>Tromsø</option>
-            <option>Drammen</option><option>Fredrikstad</option><option>Sarpsborg</option>
-            <option>Sandnes</option><option>Bodø</option><option>Ålesund</option>
-            <option>Hamar</option><option>Moss</option><option>Gjøvik</option>
-            <option>Lillehammer</option><option>Halden</option><option>Molde</option><option>Steinkjer</option>
-          </optgroup>
-          <optgroup label="Fylker">
-            <option>Agder</option><option>Innlandet</option><option>Møre og Romsdal</option>
-            <option>Nordland</option><option>Rogaland</option><option>Troms og Finnmark</option>
-            <option>Trøndelag</option><option>Vestfold og Telemark</option><option>Vestland</option><option>Viken</option>
-          </optgroup>
+          <option value="">Laster kommuner...</option>
         </select>
       </div>
       <div style="flex:2 1 260px">
@@ -111,9 +119,9 @@
 
   <!-- Loading -->
   <div id="loading" class="card loading hidden">
-    <div class="icon">🔎</div>
-    <div class="phase" id="phase">Søker...</div>
-    <div class="sub">Sjekker registre og analyserer – 15–40 sek</div>
+    <div style="font-size:2rem;margin-bottom:10px">🔎</div>
+    <div style="color:#f97316;font-weight:600" id="phase">Søker...</div>
+    <div style="color:#6e7681;font-size:0.78rem;margin-top:6px">Sjekker registre og analyserer – 15–40 sek</div>
   </div>
 
   <!-- Error -->
@@ -121,17 +129,16 @@
 
   <!-- Results -->
   <div id="results" class="hidden">
-    <!-- Tabs -->
-    <div id="tabs" class="hidden" style="display:flex;gap:8px;margin-bottom:14px">
+    <div id="tabs" class="hidden tabs-row">
       <button class="tab-btn active" id="tabCompanies" onclick="setTab('companies')">🏢 Bedrifter</button>
       <button class="tab-btn" id="tabFarmers" onclick="setTab('farmers')">🌾 Bønder/ENK</button>
     </div>
-    <!-- Summary -->
     <div class="flex-sb" style="margin-bottom:12px">
       <div id="summary" style="color:#8b949e;font-size:0.84rem"></div>
-      <button class="btn-sec" onclick="exportCSV()">📥 Eksporter CSV</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn-sec" onclick="exportCSV()">📥 Eksporter CSV</button>
+      </div>
     </div>
-    <!-- Cards -->
     <div id="cards"></div>
     <div class="info-bar">
       <strong style="color:#8b949e">Kilder:</strong> Brønnøysundregistrene (åpent API) · Landbruksregisteret (Landbruksdirektoratet) · Claude AI ·
@@ -146,8 +153,79 @@ let companiesData = [];
 let farmersData = [];
 let currentTab = "companies";
 let currentSource = "";
+let favourites = JSON.parse(localStorage.getItem("subfinder_favs") || "[]");
+
+// Load kommuner from Brreg API
+async function loadKommuner() {
+  const sel = document.getElementById("location");
+  try {
+    // Add fylker first
+    const fylker = [
+      {nummer:"AGD", navn:"── Fylker ──", disabled:true},
+      {nummer:"AGD", navn:"Agder"},
+      {nummer:"INN", navn:"Innlandet"},
+      {nummer:"MOR", navn:"Møre og Romsdal"},
+      {nummer:"NOR", navn:"Nordland"},
+      {nummer:"OSL", navn:"Oslo"},
+      {nummer:"ROG", navn:"Rogaland"},
+      {nummer:"TRF", navn:"Troms"},
+      {nummer:"FIN", navn:"Finnmark"},
+      {nummer:"TRL", navn:"Trøndelag"},
+      {nummer:"VFT", navn:"Vestfold og Telemark"},
+      {nummer:"VES", navn:"Vestland"},
+      {nummer:"BUS", navn:"Buskerud"},
+      {nummer:"AKE", navn:"Akershus"},
+      {nummer:"OST", navn:"Østfold"},
+    ];
+
+    // Fetch kommuner from Brreg
+    const res = await fetch("https://data.brreg.no/enhetsregisteret/api/kommuner", {
+      headers: { Accept: "application/json" }
+    });
+    const data = await res.json();
+    const kommuner = (data._embedded?.kommuner || [])
+      .map(k => ({ nummer: k.nummer, navn: k.navn }))
+      .sort((a, b) => a.navn.localeCompare(b.navn, "no"));
+
+    sel.innerHTML = '<option value="">Velg område...</option>';
+
+    // Add fylker group
+    const fylkGrp = document.createElement("optgroup");
+    fylkGrp.label = "Fylker";
+    fylker.filter(f => !f.disabled).forEach(f => {
+      const o = document.createElement("option");
+      o.value = f.navn; o.textContent = f.navn;
+      fylkGrp.appendChild(o);
+    });
+    sel.appendChild(fylkGrp);
+
+    // Add kommuner group
+    const kommGrp = document.createElement("optgroup");
+    kommGrp.label = "Kommuner (" + kommuner.length + ")";
+    kommuner.forEach(k => {
+      const o = document.createElement("option");
+      o.value = k.navn;
+      o.dataset.nummer = k.nummer;
+      o.textContent = k.navn;
+      kommGrp.appendChild(o);
+    });
+    sel.appendChild(kommGrp);
+
+  } catch(e) {
+    // Fallback
+    sel.innerHTML = `<option value="">Velg område...</option>
+      <optgroup label="Kommuner">
+        <option>Arendal</option><option>Bergen</option><option>Stavanger</option>
+        <option>Trondheim</option><option>Kristiansand</option><option>Tromsø</option>
+        <option>Drammen</option><option>Fredrikstad</option><option>Bodø</option>
+        <option>Ålesund</option><option>Hamar</option><option>Molde</option>
+      </optgroup>`;
+  }
+}
 
 document.getElementById("location").addEventListener("change", updateBtn);
+loadKommuner();
+updateFavCount();
 
 function setEq(val, btn) {
   eq = val;
@@ -213,27 +291,88 @@ function setTab(tab) {
 
 function renderResults(location) {
   const eqIcons = { lastebil:"🚛", traktor:"🚜", graver:"🏗️" };
-  const data = currentTab === "farmers" ? farmersData : companiesData;
   const bankruptCount = companiesData.filter(c => c.score === 0).length;
 
-  // Tabs
   if (farmersData.length > 0) {
-    document.getElementById("tabCompanies").textContent = `🏢 Bedrifter (${companiesData.length})`;
-    document.getElementById("tabFarmers").textContent = `🌾 Bønder/ENK (${farmersData.length})`;
+    document.getElementById("tabCompanies").textContent = "🏢 Bedrifter (" + companiesData.length + ")";
+    document.getElementById("tabFarmers").textContent = "🌾 Bønder/ENK (" + farmersData.length + ")";
     document.getElementById("tabs").style.display = "flex";
+    document.getElementById("tabs").classList.remove("hidden");
   } else {
     hide("tabs");
   }
 
-  // Summary
-  let sumHTML = `<strong style="color:#e6edf3">${companiesData.length} selskaper</strong> · ${location} · ${eqIcons[eq]}`;
-  if (currentSource === "brreg") sumHTML += `<span class="src-badge" style="background:#0d2818;color:#4ade80;border-color:#166534">Brreg</span>`;
-  if (currentSource === "ai")   sumHTML += `<span class="src-badge" style="background:#2d1b00;color:#fbbf24;border-color:#92400e">AI</span>`;
-  if (bankruptCount > 0) sumHTML += `<span class="src-badge" style="background:#2d0a0a;color:#f87171;border-color:#7f1d1d">⚠️ ${bankruptCount} konkurs</span>`;
+  let sumHTML = "<strong style='color:#e6edf3'>" + companiesData.length + " selskaper</strong> · " + location + " · " + eqIcons[eq];
+  if (currentSource === "brreg") sumHTML += "<span class='src-badge' style='background:#0d2818;color:#4ade80;border-color:#166534'>Brreg</span>";
+  if (currentSource === "ai")   sumHTML += "<span class='src-badge' style='background:#2d1b00;color:#fbbf24;border-color:#92400e'>AI</span>";
+  if (bankruptCount > 0) sumHTML += "<span class='src-badge' style='background:#2d0a0a;color:#f87171;border-color:#7f1d1d'>⚠️ " + bankruptCount + " konkurs</span>";
   document.getElementById("summary").innerHTML = sumHTML;
 
   renderCards();
   show("results");
+}
+
+function isFav(orgnr) { return favourites.some(f => f.orgnr === orgnr); }
+
+function toggleFav(company) {
+  const idx = favourites.findIndex(f => f.orgnr === company.orgnr);
+  if (idx >= 0) {
+    favourites.splice(idx, 1);
+  } else {
+    favourites.push(company);
+  }
+  localStorage.setItem("subfinder_favs", JSON.stringify(favourites));
+  updateFavCount();
+  renderCards();
+  if (document.getElementById("favPanel") && !document.getElementById("favPanel").classList.contains("hidden")) {
+    renderFavPanel();
+  }
+}
+
+function updateFavCount() {
+  document.getElementById("favCount").textContent = favourites.length;
+}
+
+function toggleFavPanel() {
+  const panel = document.getElementById("favPanel");
+  panel.classList.toggle("hidden");
+  if (!panel.classList.contains("hidden")) renderFavPanel();
+}
+
+function renderFavPanel() {
+  const list = document.getElementById("favList");
+  if (favourites.length === 0) {
+    list.innerHTML = "<div style='color:#6e7681;font-size:0.85rem'>Ingen favoritter lagret ennå.</div>";
+    return;
+  }
+  list.innerHTML = favourites.map(f => `
+    <div class="fav-item">
+      <div>
+        <strong>${f.navn}</strong>
+        <span style="color:#6e7681;margin-left:8px;font-size:0.78rem">${f.orgnr||""} · ${f.kommune||""}</span>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        ${f.orgnr ? `<a class="tag" href="https://www.proff.no/selskap/-/-/-/${f.orgnr}/" target="_blank">📊 Proff</a>` : ""}
+        <button class="btn-sec" style="font-size:0.72rem;padding:3px 8px;color:#f87171" onclick="removeFav('${f.orgnr}')">✕</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function removeFav(orgnr) {
+  favourites = favourites.filter(f => f.orgnr !== orgnr);
+  localStorage.setItem("subfinder_favs", JSON.stringify(favourites));
+  updateFavCount();
+  renderFavPanel();
+}
+
+function clearFavs() {
+  if (confirm("Slett alle favoritter?")) {
+    favourites = [];
+    localStorage.setItem("subfinder_favs", JSON.stringify(favourites));
+    updateFavCount();
+    renderFavPanel();
+  }
 }
 
 function renderCards() {
@@ -241,7 +380,7 @@ function renderCards() {
   const container = document.getElementById("cards");
 
   if (data.length === 0) {
-    container.innerHTML = `<div class="card" style="text-align:center;color:#8b949e;padding:32px">Ingen ${currentTab==="farmers"?"landbruksforetak":"selskaper"} funnet. Prøv et annet område.</div>`;
+    container.innerHTML = "<div class='card' style='text-align:center;color:#8b949e;padding:32px'>Ingen " + (currentTab==="farmers"?"landbruksforetak":"selskaper") + " funnet. Prøv et annet område.</div>";
     return;
   }
 
@@ -257,6 +396,7 @@ function renderCards() {
       "Konkurs":       ["#2d0a0a","#f87171","#7f1d1d"],
     };
     const [sBg,sCol,sBorder] = statusMap[r.anbefaling]||statusMap["Mulig"];
+    const favSaved = r.orgnr && isFav(r.orgnr);
 
     const links = !bankrupt && r.orgnr ? `
       <a class="tag" href="https://www.skatteetaten.no/bedrift-og-organisasjon/starte-og-drive/skatteattester/?orgnr=${r.orgnr}" target="_blank">🧾 Skatteattest</a>
@@ -267,17 +407,30 @@ function renderCards() {
     const risks = (r.risikoer||[]).map(x=>`<span class="risk">⚠️ ${x}</span>`).join("");
     const tjenester = r.tjenester?.length ? `<span style="margin-left:8px;color:#6e7681;font-size:0.7rem">${r.tjenester.join(" · ")}</span>` : "";
 
+    // Contact info
+    const contactParts = [];
+    if (r.telefon) contactParts.push("📞 " + r.telefon);
+    if (r.epost) contactParts.push("✉️ <a href='mailto:" + r.epost + "' style='color:#58a6ff'>" + r.epost + "</a>");
+    if (r.nettside) contactParts.push("🌐 <a href='" + r.nettside + "' target='_blank' style='color:#58a6ff'>" + r.nettside.replace("https://","").replace("http://","") + "</a>");
+    const contactHTML = contactParts.length ? `<div class="result-contact">${contactParts.join(" · ")}</div>` : "";
+
+    // Warning badges
+    const warnings = [];
+    if (!r.ansatte || r.ansatte === 0) warnings.push("<span class='risk'>⚠️ Ingen registrerte ansatte</span>");
+
     return `
       <div class="result" style="border-left:3px solid ${leftColor};opacity:${bankrupt?0.75:1}">
         <div class="result-top">
           <div style="flex:1;min-width:160px">
             <div style="font-weight:700;font-size:0.93rem;margin-bottom:3px">
               <span style="color:#484f58;margin-right:6px">#${i+1}</span>${r.navn}${tjenester}
+              ${r.orgnr ? `<button class="fav-btn${favSaved?' saved':''}" onclick='toggleFav(${JSON.stringify(r)})' title="${favSaved?'Fjern favoritt':'Lagre som favoritt'}">${favSaved?"⭐":"☆"}</button>` : ""}
             </div>
             <div class="result-meta">
               ${r.orgnr?`Org.nr: ${r.orgnr} · `:""}${r.kommune||""}${r.stiftet?` · Est. ${r.stiftet}`:""}${r.ansatte>0?` · ${r.ansatte} ansatte`:""}${r.organisasjonsform?` · ${r.organisasjonsform}`:""}
             </div>
             ${r.nace?`<div class="result-nace">${r.nace}</div>`:""}
+            ${contactHTML}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
             <div class="scores-row">
@@ -289,7 +442,7 @@ function renderCards() {
         </div>
         <div class="result-ai">
           <span style="color:#8b949e">AI: </span>${r.begrunnelse}
-          <div class="risks-row">${risks}</div>
+          <div class="risks-row">${warnings.join("")}${risks}</div>
         </div>
       </div>`;
   }).join("");
@@ -298,9 +451,10 @@ function renderCards() {
 function exportCSV() {
   const data = currentTab === "farmers" ? farmersData : companiesData;
   const location = document.getElementById("location").value;
-  const h = ["Navn","Org.nr","Kommune","Bransje","Ansatte","Stiftet","Org.form","Score","Anbefaling","Begrunnelse","Risikoer","Skatteattest","Proff"];
+  const h = ["Navn","Org.nr","Kommune","Bransje","Ansatte","Stiftet","Org.form","Telefon","Epost","Score","Anbefaling","Begrunnelse","Risikoer","Skatteattest","Proff"];
   const rows = data.map(r => [
     r.navn, r.orgnr||"", r.kommune||"", r.nace||"", r.ansatte||"", r.stiftet||"", r.organisasjonsform||"",
+    r.telefon||"", r.epost||"",
     r.score, r.anbefaling, r.begrunnelse, (r.risikoer||[]).join(" / "),
     r.orgnr?`https://www.skatteetaten.no/bedrift-og-organisasjon/starte-og-drive/skatteattester/?orgnr=${r.orgnr}`:"",
     r.orgnr?`https://www.proff.no/selskap/-/-/-/${r.orgnr}/`:"",
@@ -309,6 +463,19 @@ function exportCSV() {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));
   a.download = `subfinder_${location}_${eq}_${currentTab}.csv`;
+  a.click();
+}
+
+function exportFavCSV() {
+  const h = ["Navn","Org.nr","Kommune","Bransje","Ansatte","Score","Anbefaling","Proff"];
+  const rows = favourites.map(r => [
+    r.navn, r.orgnr||"", r.kommune||"", r.nace||"", r.ansatte||"", r.score, r.anbefaling,
+    r.orgnr?`https://www.proff.no/selskap/-/-/-/${r.orgnr}/`:"",
+  ]);
+  const csv = [h,...rows].map(r=>r.map(v=>`"${String(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));
+  a.download = "subfinder_favoritter.csv";
   a.click();
 }
 </script>
