@@ -24,7 +24,7 @@ async function brregSearch(location, naceCodes) {
   const results = [];
   for (const nace of naceCodes) {
     try {
-      const url = `https://data.brreg.no/enhetsregisteret/api/enheter?naeringskode=${nace}&kommunenavn=${encodeURIComponent(location)}&size=20&konkurs=false&underAvvikling=false`;
+      const url = `https://data.brreg.no/enhetsregisteret/api/enheter?naeringskode=${nace}&kommunenavn=${encodeURIComponent(location.toUpperCase())}&size=20&konkurs=false&underAvvikling=false`;
       const res = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(6000) });
       if (!res.ok) continue;
       const data = await res.json();
