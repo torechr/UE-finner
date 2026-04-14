@@ -3,9 +3,9 @@ const Anthropic = require("@anthropic-ai/sdk");
 const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const NACE = {
-  vinter:         ["81.29", "81.21", "49.41", "43.12", "01.61"],
-  vinterlastebil: ["81.29", "81.21", "49.41", "49.42", "52.29", "43.12"],
-  vintertraktor:  ["81.29", "81.21", "01.61", "01.62", "81.30", "43.12"],
+  vinter:         ["81.29", "49.41", "43.12", "01.61"],
+  vinterlastebil: ["81.29", "49.41", "49.42", "52.29", "43.12"],
+  vintertraktor:  ["81.29", "01.61", "01.62", "81.30", "43.12"],
   trafikk:        ["80.10", "52.21", "74.90", "43.99"],
   renhold:        ["81.29", "81.21", "37.00", "38.11"],
   naturlike:      ["81.30", "02.10", "02.40", "01.61", "43.12"],
