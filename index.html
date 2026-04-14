@@ -220,6 +220,7 @@
             <button class="eq-btn" onclick="setEq('renhold',this)">◎ Renhold<span class="eq-sub">feiing · spyling</span></button>
             <button class="eq-btn" onclick="setEq('naturlike',this)">⌂ Naturlike<span class="eq-sub">kantklipp · skoging</span></button>
             <button class="eq-btn" onclick="setEq('parklike',this)">✿ Parklike<span class="eq-sub">plenklipp · gartner</span></button>
+            <button class="eq-btn" onclick="setEq('pukkverk',this)">⬡ Pukkverk<span class="eq-sub">grus · steinbrudd</span></button>
           </div>
         </div>
       </div>
@@ -356,7 +357,7 @@ async function doSearch(complete=false){
 function setTab(t){currentTab=t;document.getElementById("tabCompanies").classList.toggle("active",t==="companies");document.getElementById("tabFarmers").classList.toggle("active",t==="farmers");renderCards();}
 
 function renderResults(location){
-  const eqLabel={vinter:"Vinter",vinterlastebil:"Vinter (lastebil)",vintertraktor:"Vinter (traktor)",trafikk:"Trafikkdirigering",renhold:"Renhold",naturlike:"Naturlike arealer",parklike:"Parklike arealer",graving:"Graving"}[eq]||eq;
+  const eqLabel={vinter:"Vinter",vinterlastebil:"Vinter (lastebil)",vintertraktor:"Vinter (traktor)",trafikk:"Trafikkdirigering",renhold:"Renhold",naturlike:"Naturlike arealer",parklike:"Parklike arealer",graving:"Graving",pukkverk:"Pukkverk / steinbrudd"}[eq]||eq;
   hide("tabs");
   const bc=companiesData.filter(c=>c.score===0).length;
   let s=`<strong>${companiesData.length} selskaper</strong> · ${location} · ${eqLabel}`;
