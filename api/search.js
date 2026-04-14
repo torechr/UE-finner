@@ -92,6 +92,24 @@ async function brregSearch(location, naceCodes) {
   });
 }
 
+async function fetchDagligLeder(orgnr) {
+  try {
+    const res = await fetch(`https://data.brreg.no/enhetsregisteret/api/enheter/${orgnr}/roller`, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return "";
+    const data = await res.json();
+    const dagligLederGruppe = (data.rollegrupper || []).find(g => g.type?.kode === "DAGL");
+    if (!dagligLederGruppe) return "";
+    const roller = dagligLederGruppe.roller || [];
+    const person = roller[0]?.person;
+    if (!person) return "";
+    const navn = [person.navn?.fornavn, person.navn?.etternavn].filter(Boolean).join(" ");
+    return navn;
+  } catch { return ""; }
+}
+
 async function checkBankruptcy(orgnr) {
   try {
     const res = await fetch(`https://data.brreg.no/enhetsregisteret/api/enheter/${orgnr}`, {
@@ -161,7 +179,10 @@ module.exports = async (req, res) => {
     const top = companies.slice(0, 50);
     const enriched = await Promise.all(top.map(async c => {
       const hasEmployees = (c.antallAnsatte || 0) > 0;
-      const isBankrupt = hasEmployees ? await checkBankruptcy(c.organisasjonsnummer) : false;
+      const [isBankrupt, dagligLeder] = await Promise.all([
+        hasEmployees ? checkBankruptcy(c.organisasjonsnummer) : Promise.resolve(false),
+        fetchDagligLeder(c.organisasjonsnummer),
+      ]);
       return {
         navn: c.navn, orgnr: c.organisasjonsnummer,
         kommune: c.forretningsadresse?.kommune || location,
@@ -175,6 +196,7 @@ module.exports = async (req, res) => {
         telefon: c.telefon || c.mobil || "",
         epost: c.epostadresse || "",
         nettside: c.hjemmeside || "",
+        dagligLeder,
         konkurs: isBankrupt,
       };
     }));
