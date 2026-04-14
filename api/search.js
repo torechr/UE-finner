@@ -263,13 +263,17 @@ module.exports = async (req, res) => {
       return res.json({ companies: parsed.sort((a, b) => (b.score||0)-(a.score||0)), source: "ai" });
     }
 
-    // Enrich top 30
-    const top = companies.slice(0, 30);
+    // Enrich all companies - fetch manager only for top 15 (sorted by employees)
+    const top = companies.slice(0, 50);
+    const sortedByAnsatte = [...top].sort((a, b) => (b.antallAnsatte||0) - (a.antallAnsatte||0));
+    const topOrgNrs = new Set(sortedByAnsatte.slice(0, 15).map(c => c.organisasjonsnummer));
+
     const enriched = await Promise.all(top.map(async c => {
       const hasEmployees = (c.antallAnsatte || 0) > 0;
+      const fetchManager = topOrgNrs.has(c.organisasjonsnummer);
       const [isBankrupt, dagligLeder] = await Promise.all([
         hasEmployees ? checkBankruptcy(c.organisasjonsnummer) : Promise.resolve(false),
-        fetchDagligLeder(c.organisasjonsnummer),
+        fetchManager ? fetchDagligLeder(c.organisasjonsnummer) : Promise.resolve(""),
       ]);
       return {
         navn: c.navn,
