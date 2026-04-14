@@ -13,17 +13,6 @@ const NACE = {
   graving:        ["43.12", "43.13", "42.11", "42.21", "41.20", "43.99"],
 };
 
-// Purpose keywords searched in vedtektsfestetFormaal via Brreg søk endpoint
-const PURPOSE_KEYWORDS = {
-  vinter:         ["brøyting", "vinterdrift", "snørydding", "salting"],
-  vinterlastebil: ["brøyting", "vinterdrift", "salting"],
-  vintertraktor:  ["brøyting", "vinterdrift", "snørydding"],
-  trafikk:        ["trafikkdirigering", "arbeidsvarsling", "dirigering"],
-  renhold:        ["feiing", "spyling", "veisop"],
-  naturlike:      ["kantklipp", "skoging", "skogrydding", "vegetasjonsrydding", "trefelling"],
-  parklike:       ["arborist", "trepleie", "plenklipp", "gartnertjenester"],
-  graving:        ["graving", "maskinentreprenør", "hjulgraver", "beltegraver", "minigraver"],
-};
 const KEYWORDS = {
   vinter:         ["broyting", "vinterdrift", "snorydding", "salting", "stroing", "brøyting", "snørydding", "strøing"],
   vinterlastebil: ["brøyting", "broyting", "lastebil", "vinterdrift", "salting", "transport"],
@@ -174,7 +163,6 @@ async function brregFetch(url) {
 }
 
 async function brregSearchByKommune(kommuneNr, naceCodes, keywords, purposeKeywords) {
-  // NACE and keyword searches run in parallel
   const nacePromises = naceCodes.map(nace =>
     brregFetch(`https://data.brreg.no/enhetsregisteret/api/enheter?naeringskode=${nace}&kommunenummer=${kommuneNr}&size=50&konkurs=false&underAvvikling=false&organisasjonsform=AS,ENK,ANS,DA,SA,NUF,BA,STI,FLI`)
       .then(data => data?._embedded?.enheter || [])
@@ -185,22 +173,17 @@ async function brregSearchByKommune(kommuneNr, naceCodes, keywords, purposeKeywo
       .then(data => data?._embedded?.enheter || [])
       .catch(() => [])
   );
-  // Purpose/formaal search via Brreg søk endpoint (searches name + purpose text)
-  const purposePromises = (purposeKeywords || []).map(kw =>
-    brregFetch(`https://data.brreg.no/enhetsregisteret/api/enheter?navn=${encodeURIComponent(kw)}&kommunenummer=${kommuneNr}&size=20&konkurs=false&underAvvikling=false`)
-      .then(data => data?._embedded?.enheter || [])
-      .catch(() => [])
-  );
-  const results = await Promise.all([...nacePromises, ...keywordPromises, ...purposePromises]);
+  const results = await Promise.all([...nacePromises, ...keywordPromises]);
   return results.flat();
 }
 
-async function brregSearch(location, naceCodes, keywords, purposeKeywords) {
+async function brregSearch(location, naceCodes, keywords, purposeKeywords, complete=false) {
   const kommuneNrs = getKommuneNr(location);
   if (kommuneNrs.length === 0) return [];
 
   const isCounty = kommuneNrs.length > 5;
-  const toSearch = isCounty ? kommuneNrs.slice(0, 5) : kommuneNrs;
+  // complete=true fetches all municipalities in county, otherwise top 5
+  const toSearch = isCounty && !complete ? kommuneNrs.slice(0, 5) : kommuneNrs;
 
   const allResults = (await Promise.all(
     toSearch.map(nr => brregSearchByKommune(nr, naceCodes, keywords, purposeKeywords))
@@ -244,16 +227,39 @@ function safeParseJSON(text) {
 async function scoreCompanies(companies, equipment, location) {
   if (companies.length === 0) return [];
   try {
-    // Score top 15 by employees
     const list = companies
       .sort((a, b) => (b.ansatte || 0) - (a.ansatte || 0))
       .slice(0, 15)
       .map(c => ({ orgnr: c.orgnr, navn: c.navn, nace: c.nace, ansatte: c.ansatte, stiftet: c.stiftet }));
 
-    const prompt = `Du er innkjøpsekspert for Mesta AS. Vurder disse selskapene som underentreprenør for ${equipment} i ${location}. Svar KUN med JSON-array uten markdown:
-${JSON.stringify(list)}
-Format: [{"orgnr":"123","score":7,"anbefaling":"Anbefalt","begrunnelse":"Kort begrunnelse på norsk","risikoer":["risiko1"]}]
-Skala: Anbefalt=7-10, Mulig=4-6, Lav prioritet=1-3. Vekt ansatte og erfaring høyt.`;
+    const categoryContext = {
+      vinter:         "broyting/salting/stroing av veg med lastebil eller traktor. Krever erfaring med vinterdrift pa offentlig veg.",
+      vinterlastebil: "broytebil/saltbil pa offentlig veg. Lastebil med plog og saltspreder er kjernen.",
+      vintertraktor:  "traktor med frontplog og sandspreder, typisk for gang/sykkelveg og mindre veier.",
+      trafikk:        "trafikkdirigering og arbeidsvarsling ved vegarbeid. Krever kurs N301 og godkjente dirigenter.",
+      renhold:        "feiing og spyling av vegbane og tunneler. Spesialutstyr som feiemaskin og spylebil.",
+      naturlike:      "kantklipp, skoging og vegetasjonsrydding langs veg. Traktor med kantklipperutstyr eller motorsag.",
+      parklike:       "plenklipp, gartnertjenester og trepleie i vegomgivelser. Gjerne godkjent arborist for trearbeid.",
+      graving:        "graving og maskinentreprenortjenester. Hjulgraver, beltegraver eller minigraver etter oppdragsstorrelse.",
+    }[equipment] || equipment;
+
+    const prompt = `Du er innkjopsekspert for Mesta AS, Norges ledende vegentreprenor. Mesta utforer drift og vedlikehold av riks- og fylkesveger pa vegne av Statens vegvesen og fylkeskommuner.
+
+Vurder disse selskapene som potensielle underentreprenorer (UE) for oppgaven: ${categoryContext} i ${location}.
+
+Mestas krav til UE-er:
+- Dokumentert erfaring med tilsvarende oppdrag
+- Tilstrekkelig kapasitet (utstyr og personell) for vegdriftsoppdrag
+- Stabil drift (ikke nystartet, ikke for sma)
+- God lokalkunnskap i oppdrags omradet
+
+Selskaper: ${JSON.stringify(list)}
+
+Svar KUN med JSON-array:
+[{"orgnr":"123","score":7,"anbefaling":"Anbefalt","begrunnelse":"1-2 setninger pa norsk om hvorfor/hvorfor ikke egnet for Mesta","risikoer":["konkret risiko"]}]
+
+Skala: Anbefalt=7-10 (klar for kontrakt), Mulig=4-6 (potensial men usikkerhet), Lav prioritet=1-3 (lite egnet).
+Vekt: riktig kompetanse > kapasitet > erfaring/alder > storrelse.`;
 
     const msg = await client.messages.create({
       model: "claude-sonnet-4-6",
@@ -275,8 +281,8 @@ module.exports = async (req, res) => {
 
     const naceCodes = NACE[equipment] || NACE.graving;
     const keywords = KEYWORDS[equipment] || [];
-    const purposeKeywords = PURPOSE_KEYWORDS[equipment] || [];
-    const companies = await brregSearch(location, naceCodes, keywords, purposeKeywords);
+    
+    const companies = await brregSearch(location, naceCodes, keywords);
     console.log(`Brreg: ${companies.length} treff for ${location}/${equipment}`);
 
     // AI fallback if no Brreg results
