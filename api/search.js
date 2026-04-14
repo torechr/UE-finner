@@ -4,8 +4,8 @@ const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const NACE = {
   vinter:         ["81.29", "81.21", "49.41", "43.12", "01.61"],
-  vinterlastebil: ["81.29", "81.21", "49.41", "49.42", "52.29"],
-  vintertraktor:  ["81.29", "81.21", "01.61", "01.62", "81.30"],
+  vinterlastebil: ["81.29", "81.21", "49.41", "49.42", "52.29", "43.12"],
+  vintertraktor:  ["81.29", "81.21", "01.61", "01.62", "81.30", "43.12"],
   trafikk:        ["80.10", "52.21", "74.90", "43.99"],
   renhold:        ["81.29", "81.21", "37.00", "38.11"],
   naturlike:      ["81.30", "02.10", "02.40", "01.61", "43.12"],
@@ -13,14 +13,24 @@ const NACE = {
   graving:        ["43.12", "43.13", "42.11", "42.21", "41.20", "43.99"],
 };
 
-// Keywords searched in company names (catches companies with wrong NACE code)
+// Purpose keywords searched in vedtektsfestetFormaal via Brreg søk endpoint
+const PURPOSE_KEYWORDS = {
+  vinter:         ["brøyting", "vinterdrift", "snørydding", "salting"],
+  vinterlastebil: ["brøyting", "vinterdrift", "salting"],
+  vintertraktor:  ["brøyting", "vinterdrift", "snørydding"],
+  trafikk:        ["trafikkdirigering", "arbeidsvarsling", "dirigering"],
+  renhold:        ["feiing", "spyling", "veisop"],
+  naturlike:      ["kantklipp", "skoging", "skogrydding", "vegetasjonsrydding", "trefelling"],
+  parklike:       ["arborist", "trepleie", "plenklipp", "gartnertjenester"],
+  graving:        ["graving", "maskinentreprenør", "hjulgraver", "beltegraver", "minigraver"],
+};
 const KEYWORDS = {
   vinter:         ["broyting", "vinterdrift", "snorydding", "salting", "stroing", "brøyting", "snørydding", "strøing"],
   vinterlastebil: ["brøyting", "broyting", "lastebil", "vinterdrift", "salting", "transport"],
   vintertraktor:  ["brøyting", "broyting", "traktor", "vinterdrift", "snørydding", "snorydding"],
   trafikk:        ["trafikkdirigering", "arbeidsvarsling", "trafikkvakt", "dirigering", "vakthold", "trafikk"],
   renhold:        ["feiing", "spyling", "renhold", "veirenhold", "tunnelrenhold", "rengjoring", "rengjøring"],
-  naturlike:      ["kantklipp", "vegetasjon", "rydding", "skogsdrift", "hogst", "skogrydding", "grasklipper", "arborist", "trepleie", "trefelling"],
+  naturlike:      ["kantklipp", "vegetasjon", "skoging", "skogrydding", "skogsdrift", "hogst", "grasklipper", "arborist", "trepleie", "trefelling"],
   parklike:       ["gartner", "plenklipp", "park", "hageservice", "landskapspleie", "gressklipper", "blomster", "arborist", "trepleie", "beskjaering"],
   graving:        ["gravemaskin", "graving", "hjulgraver", "beltegraver", "minigraver", "maskinentreprenor", "maskinentreprenør", "anleggsmaskin"],
 };
@@ -163,7 +173,7 @@ async function brregFetch(url) {
   return res.json();
 }
 
-async function brregSearchByKommune(kommuneNr, naceCodes, keywords) {
+async function brregSearchByKommune(kommuneNr, naceCodes, keywords, purposeKeywords) {
   // NACE and keyword searches run in parallel
   const nacePromises = naceCodes.map(nace =>
     brregFetch(`https://data.brreg.no/enhetsregisteret/api/enheter?naeringskode=${nace}&kommunenummer=${kommuneNr}&size=50&konkurs=false&underAvvikling=false&organisasjonsform=AS,ENK,ANS,DA,SA,NUF,BA,STI,FLI`)
@@ -175,11 +185,17 @@ async function brregSearchByKommune(kommuneNr, naceCodes, keywords) {
       .then(data => data?._embedded?.enheter || [])
       .catch(() => [])
   );
-  const results = await Promise.all([...nacePromises, ...keywordPromises]);
+  // Purpose/formaal search via Brreg søk endpoint (searches name + purpose text)
+  const purposePromises = (purposeKeywords || []).map(kw =>
+    brregFetch(`https://data.brreg.no/enhetsregisteret/api/enheter?navn=${encodeURIComponent(kw)}&kommunenummer=${kommuneNr}&size=20&konkurs=false&underAvvikling=false`)
+      .then(data => data?._embedded?.enheter || [])
+      .catch(() => [])
+  );
+  const results = await Promise.all([...nacePromises, ...keywordPromises, ...purposePromises]);
   return results.flat();
 }
 
-async function brregSearch(location, naceCodes, keywords) {
+async function brregSearch(location, naceCodes, keywords, purposeKeywords) {
   const kommuneNrs = getKommuneNr(location);
   if (kommuneNrs.length === 0) return [];
 
@@ -187,7 +203,7 @@ async function brregSearch(location, naceCodes, keywords) {
   const toSearch = isCounty ? kommuneNrs.slice(0, 5) : kommuneNrs;
 
   const allResults = (await Promise.all(
-    toSearch.map(nr => brregSearchByKommune(nr, naceCodes, keywords))
+    toSearch.map(nr => brregSearchByKommune(nr, naceCodes, keywords, purposeKeywords))
   )).flat();
 
   // Deduplicate
@@ -257,9 +273,10 @@ module.exports = async (req, res) => {
     const { location, equipment } = req.body;
     if (!location || !equipment) return res.status(400).json({ error: "Mangler location eller equipment" });
 
-    const naceCodes = NACE[equipment] || NACE.graver;
+    const naceCodes = NACE[equipment] || NACE.graving;
     const keywords = KEYWORDS[equipment] || [];
-    const companies = await brregSearch(location, naceCodes, keywords);
+    const purposeKeywords = PURPOSE_KEYWORDS[equipment] || [];
+    const companies = await brregSearch(location, naceCodes, keywords, purposeKeywords);
     console.log(`Brreg: ${companies.length} treff for ${location}/${equipment}`);
 
     // AI fallback if no Brreg results
