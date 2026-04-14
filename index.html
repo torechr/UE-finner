@@ -6,7 +6,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SubFinder – Mesta AS</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <style>
+    #map { height: 420px; border-radius: 10px; border: 1px solid #30363d; margin-bottom: 14px; }
+    .leaflet-popup-content-wrapper { background: #161b22; border: 1px solid #30363d; color: #e6edf3; border-radius: 8px; }
+    .leaflet-popup-tip { background: #161b22; }
+    .leaflet-popup-content { font-family: 'DM Sans', sans-serif; font-size: 0.82rem; line-height: 1.6; }
+    .map-popup-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+    .map-popup-score { display: inline-block; border-radius: 4px; padding: 1px 8px; font-weight: 700; font-size: 0.78rem; color: #fff; margin-bottom: 4px; }
+    .view-toggle { display: flex; gap: 7px; margin-bottom: 12px; }
+    .view-btn { padding: 6px 14px; border: 1px solid #30363d; border-radius: 7px; cursor: pointer; font-size: 0.8rem; font-weight: 600; background: #161b22; color: #8b949e; font-family: inherit; }
+    .view-btn.active { background: #f97316; border-color: #f97316; color: #fff; }
+  </style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #0d1117; color: #e6edf3; font-family: 'DM Sans', sans-serif; min-height: 100vh; }
     a { color: #58a6ff; }
@@ -172,8 +183,15 @@
     </div>
     <div class="flex-sb" style="margin-bottom:12px">
       <div id="summary" style="color:#8b949e;font-size:0.84rem"></div>
-      <button class="btn-sec" onclick="exportCSV()">📥 Eksporter CSV</button>
+      <div style="display:flex;gap:7px">
+        <div class="view-toggle">
+          <button class="view-btn active" id="btnList" onclick="setView('list')">☰ Liste</button>
+          <button class="view-btn" id="btnMap" onclick="setView('map')">🗺️ Kart</button>
+        </div>
+        <button class="btn-sec" onclick="exportCSV()">📥 Eksporter CSV</button>
+      </div>
     </div>
+    <div id="mapContainer" class="hidden"><div id="map"></div></div>
     <div id="cards"></div>
     <div class="info-bar">
       <strong style="color:#8b949e">Kilder:</strong> Brønnøysundregistrene (åpent API) · Landbruksregisteret · Claude AI ·
@@ -261,6 +279,109 @@ function renderCards(){
 
 function exportCSV(){const data=currentTab==="farmers"?farmersData:companiesData;const loc=document.getElementById("location").value;const h=["Navn","Org.nr","Kommune","Bransje","Ansatte","Stiftet","Org.form","Telefon","Epost","Score","Anbefaling","Begrunnelse","Risikoer","Skatteattest","Proff"];const rows=data.map(r=>[r.navn,r.orgnr||"",r.kommune||"",r.nace||"",r.ansatte||"",r.stiftet||"",r.organisasjonsform||"",r.telefon||"",r.epost||"",r.score,r.anbefaling,r.begrunnelse,(r.risikoer||[]).join(" / "),r.orgnr?`https://info.altinn.no/skjemaoversikt/skatteetaten/bestilling-av-opplysninger-om-skatt-og-avgift-rf-1507/`:"",r.orgnr?`https://www.proff.no/search?q=${r.orgnr}`:""]);const csv=[h,...rows].map(r=>r.map(v=>`"${String(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));a.download=`subfinder_${loc}_${eq}.csv`;a.click();}
 function exportFavCSV(){const h=["Navn","Org.nr","Kommune","Score","Anbefaling","Telefon","Epost","Proff"];const rows=favourites.map(r=>[r.navn,r.orgnr||"",r.kommune||"",r.score,r.anbefaling,r.telefon||"",r.epost||"",r.orgnr?`https://www.proff.no/search?q=${r.orgnr}`:""]);const csv=[h,...rows].map(r=>r.map(v=>`"${String(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));a.download="subfinder_favoritter.csv";a.click();}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+let map = null;
+let currentView = "list";
+let markers = [];
+
+function setView(view) {
+  currentView = view;
+  document.getElementById("btnList").classList.toggle("active", view === "list");
+  document.getElementById("btnMap").classList.toggle("active", view === "map");
+  document.getElementById("cards").classList.toggle("hidden", view === "map");
+  document.getElementById("mapContainer").classList.toggle("hidden", view === "list");
+  if (view === "map") renderMap();
+}
+
+async function geocode(company) {
+  // Try with full address first, fall back to kommune
+  const queries = [];
+  if (company.adresse && company.postnummer) {
+    queries.push(`${company.adresse}, ${company.postnummer} ${company.poststed}, Norway`);
+  }
+  if (company.postnummer) {
+    queries.push(`${company.postnummer} ${company.poststed}, Norway`);
+  }
+  queries.push(`${company.kommune}, Norway`);
+
+  for (const q of queries) {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
+        headers: { "Accept-Language": "no", "User-Agent": "SubFinder/2.0 Mesta" }
+      });
+      const data = await res.json();
+      if (data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    } catch { continue; }
+  }
+  return null;
+}
+
+async function renderMap() {
+  const data = currentTab === "farmers" ? farmersData : companiesData;
+  if (data.length === 0) return;
+
+  // Init map if not already
+  if (!map) {
+    map = L.map("map");
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+      maxZoom: 18,
+    }).addTo(map);
+  }
+
+  // Clear existing markers
+  markers.forEach(m => m.remove());
+  markers = [];
+
+  // Show loading state
+  document.getElementById("map").style.opacity = "0.6";
+
+  // Geocode top 25 companies (avoid rate limiting)
+  const toGeocode = data.filter(c => c.anbefaling !== "Konkurs").slice(0, 25);
+  const bounds = [];
+
+  for (const company of toGeocode) {
+    const coords = await geocode(company);
+    if (!coords) continue;
+
+    // Add small random offset so overlapping markers are visible
+    const lat = coords.lat + (Math.random() - 0.5) * 0.002;
+    const lng = coords.lng + (Math.random() - 0.5) * 0.002;
+
+    const scoreColor = company.score >= 7 ? "#00c853" : company.score >= 5 ? "#ff9800" : "#f44336";
+    const icon = L.divIcon({
+      className: "",
+      html: `<div style="background:${scoreColor};color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.75rem;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.5)">${company.score}</div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+    });
+
+    const contactLine = [company.telefon, company.epost].filter(Boolean).join(" · ");
+    const popup = `
+      <div class="map-popup-name">${company.navn}</div>
+      <span class="map-popup-score" style="background:${scoreColor}">${company.score}/10 ${company.anbefaling}</span><br>
+      <span style="color:#8b949e;font-size:0.75rem">${company.orgnr || ""} · ${company.nace || ""}</span><br>
+      ${company.ansatte > 0 ? `<span style="color:#8b949e;font-size:0.75rem">👥 ${company.ansatte} ansatte</span><br>` : ""}
+      ${contactLine ? `<span style="color:#8b949e;font-size:0.75rem">📞 ${contactLine}</span><br>` : ""}
+      ${company.adresse ? `<span style="color:#6e7681;font-size:0.72rem">${company.adresse}, ${company.postnummer} ${company.poststed}</span>` : ""}
+    `;
+
+    const marker = L.marker([lat, lng], { icon }).addTo(map).bindPopup(popup);
+    markers.push(marker);
+    bounds.push([lat, lng]);
+
+    // Small delay to avoid Nominatim rate limit
+    await new Promise(r => setTimeout(r, 150));
+  }
+
+  document.getElementById("map").style.opacity = "1";
+
+  if (bounds.length > 0) {
+    map.fitBounds(bounds, { padding: [40, 40] });
+  }
+}
 </script>
 </body>
 </html>
