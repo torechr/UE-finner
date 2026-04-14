@@ -11,7 +11,7 @@ const NACE = {
   naturlike:      ["81.30", "02.10", "02.40", "01.61", "43.12"],
   parklike:       ["81.30", "01.19", "01.13", "02.10", "02.40"],
   graving:        ["43.12", "43.13", "42.11", "42.21", "41.20", "43.99"],
-  pukkverk:       ["08.11", "08.12", "23.70", "49.41"],
+  pukkverk:       ["08.11", "08.12", "08.91", "23.70"],
 };
 
 const KEYWORDS = {
@@ -23,7 +23,7 @@ const KEYWORDS = {
   naturlike:      ["kantklipp", "vegetasjon", "skoging", "skogrydding", "skogsdrift", "hogst", "grasklipper", "arborist", "trepleie", "trefelling"],
   parklike:       ["gartner", "plenklipp", "park", "hageservice", "landskapspleie", "gressklipper", "blomster", "arborist", "trepleie", "beskjaering"],
   graving:        ["gravemaskin", "graving", "hjulgraver", "beltegraver", "minigraver", "maskinentreprenor", "maskinentreprenør", "anleggsmaskin"],
-  pukkverk:       ["pukkverk", "steinbrudd", "grustak", "pukk", "grus", "knust", "singel", "tilslag", "steinknusing"],
+  pukkverk:       ["pukkverk", "steinbrudd", "grustak", "pukk", "grus", "knust", "singel", "tilslag", "steinknusing", "stein", "hellebrudd", "fjellbrudd", "knusing"],
 };
 
 // Municipality number mapping (all Norwegian municipalities 2024)
