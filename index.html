@@ -228,12 +228,18 @@
       </div>
       <div style="flex:2 1 260px">
         <label class="lbl">Utstyrstype</label>
-        <div class="eq-row">
-          <button class="eq-btn" onclick="setEq('vinter',this)">❄ Vinter<span class="eq-sub">brøyting · salting</span></button>
-          <button class="eq-btn" onclick="setEq('trafikk',this)">⚠ Trafikk<span class="eq-sub">dirigering · varsling</span></button>
-          <button class="eq-btn" onclick="setEq('renhold',this)">◎ Renhold<span class="eq-sub">feiing · spyling</span></button>
-          <button class="eq-btn" onclick="setEq('naturlike',this)">⌂ Naturlike<span class="eq-sub">kantklipp · rydding</span></button>
-          <button class="eq-btn" onclick="setEq('parklike',this)">✿ Parklike<span class="eq-sub">plenklipp · gartner</span></button>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="eq-row">
+            <button class="eq-btn" onclick="setEq('vinterlastebil',this)">❄ Vinter · lastebil<span class="eq-sub">brøyting · salting</span></button>
+            <button class="eq-btn" onclick="setEq('vintertraktor',this)">❄ Vinter · traktor<span class="eq-sub">brøyting · strøing</span></button>
+            <button class="eq-btn" onclick="setEq('graving',this)">⬛ Graving<span class="eq-sub">hjul · belte · mini</span></button>
+          </div>
+          <div class="eq-row">
+            <button class="eq-btn" onclick="setEq('trafikk',this)">⚠ Trafikkdirigering<span class="eq-sub">varsling · dirigering</span></button>
+            <button class="eq-btn" onclick="setEq('renhold',this)">◎ Renhold<span class="eq-sub">feiing · spyling</span></button>
+            <button class="eq-btn" onclick="setEq('naturlike',this)">⌂ Naturlike<span class="eq-sub">kantklipp · rydding</span></button>
+            <button class="eq-btn" onclick="setEq('parklike',this)">✿ Parklike<span class="eq-sub">plenklipp · gartner</span></button>
+          </div>
         </div>
       </div>
       <button class="btn-primary" id="searchBtn" onclick="doSearch()" disabled>Søk →</button>
@@ -312,7 +318,7 @@ async function doSearch(){
 function setTab(t){currentTab=t;document.getElementById("tabCompanies").classList.toggle("active",t==="companies");document.getElementById("tabFarmers").classList.toggle("active",t==="farmers");renderCards();}
 
 function renderResults(location){
-  const eqLabel={vinter:"Vinter",trafikk:"Trafikkdirigering",renhold:"Renhold",naturlike:"Naturlike arealer",parklike:"Parklike arealer"}[eq]||eq;
+  const eqLabel={vinter:"Vinter",vinterlastebil:"Vinter (lastebil)",vintertraktor:"Vinter (traktor)",trafikk:"Trafikkdirigering",renhold:"Renhold",naturlike:"Naturlike arealer",parklike:"Parklike arealer",graving:"Graving"}[eq]||eq;
   if(farmersData.length>0){
     document.getElementById("tabCompanies").textContent="Bedrifter ("+companiesData.length+")";
     document.getElementById("tabFarmers").textContent="Bønder / ENK ("+farmersData.length+")";
