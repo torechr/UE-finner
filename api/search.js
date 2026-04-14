@@ -4,19 +4,25 @@ const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const NACE = {
   vinter:         ["81.29", "81.21", "49.41", "43.12", "01.61"],
+  vinterlastebil: ["81.29", "81.21", "49.41", "49.42", "52.29"],
+  vintertraktor:  ["81.29", "81.21", "01.61", "01.62", "81.30"],
   trafikk:        ["80.10", "52.21", "74.90", "43.99"],
   renhold:        ["81.29", "81.21", "37.00", "38.11"],
   naturlike:      ["81.30", "02.10", "02.40", "01.61", "43.12"],
   parklike:       ["81.30", "01.19", "01.13"],
+  graving:        ["43.12", "43.13", "42.11", "42.21", "41.20", "43.99"],
 };
 
 // Keywords searched in company names (catches companies with wrong NACE code)
 const KEYWORDS = {
-  vinter:         ["broyting", "broeyting", "vinterdrift", "snorydding", "salting", "stroing", "brøyting", "snørydding", "strøing"],
+  vinter:         ["broyting", "vinterdrift", "snorydding", "salting", "stroing", "brøyting", "snørydding", "strøing"],
+  vinterlastebil: ["brøyting", "broyting", "lastebil", "vinterdrift", "salting", "transport"],
+  vintertraktor:  ["brøyting", "broyting", "traktor", "vinterdrift", "snørydding", "snorydding"],
   trafikk:        ["trafikkdirigering", "arbeidsvarsling", "trafikkvakt", "dirigering", "vakthold", "trafikk"],
   renhold:        ["feiing", "spyling", "renhold", "veirenhold", "tunnelrenhold", "rengjoring", "rengjøring"],
   naturlike:      ["kantklipp", "vegetasjon", "rydding", "skogsdrift", "hogst", "skogrydding", "grasklipper"],
   parklike:       ["gartner", "plenklipp", "park", "hageservice", "landskapspleie", "gressklipper", "blomster"],
+  graving:        ["gravemaskin", "graving", "hjulgraver", "beltegraver", "minigraver", "maskinentreprenor", "maskinentreprenør", "anleggsmaskin"],
 };
 
 // Municipality number mapping (all Norwegian municipalities 2024)
@@ -259,11 +265,14 @@ module.exports = async (req, res) => {
     // AI fallback if no Brreg results
     if (companies.length === 0) {
       const eqDesc = {
-        vinter:    "winter road maintenance (snow plowing, salting, sanding)",
-        trafikk:   "traffic control and road work safety (trafikkdirigering, arbeidsvarsling)",
-        renhold:   "road cleaning (sweeping, pressure washing, tunnel cleaning)",
-        naturlike: "vegetation management (grass cutting, roadside clearing, tree felling)",
-        parklike:  "park and garden maintenance (lawn mowing, gardening, landscaping)",
+        vinter:         "winter road maintenance (snow plowing, salting, sanding)",
+        vinterlastebil: "winter road maintenance with trucks (snow plowing, salting)",
+        vintertraktor:  "winter road maintenance with tractors (snow plowing, sanding)",
+        trafikk:        "traffic control and road work safety (trafikkdirigering, arbeidsvarsling)",
+        renhold:        "road cleaning (sweeping, pressure washing, tunnel cleaning)",
+        naturlike:      "vegetation management (grass cutting, roadside clearing, tree felling)",
+        parklike:       "park and garden maintenance (lawn mowing, gardening, landscaping)",
+        graving:        "excavation services (hjulgraver, beltegraver, minigraver, maskinentreprenor)",
       }[equipment] || equipment;
       const msg = await client.messages.create({
         model: "claude-sonnet-4-6", max_tokens: 1500,
