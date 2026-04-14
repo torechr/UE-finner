@@ -3,16 +3,20 @@ const Anthropic = require("@anthropic-ai/sdk");
 const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const NACE = {
-  lastebil: ["49.41", "49.42", "52.29", "43.12", "08.11", "08.12"],
-  traktor:  ["01.61", "01.62", "01.11", "01.13", "01.41", "81.30"],
-  graver:   ["43.12", "43.13", "42.11", "42.21", "41.20"],
+  vinter:         ["81.29", "81.21", "49.41", "43.12", "01.61"],
+  trafikk:        ["80.10", "52.21", "74.90", "43.99"],
+  renhold:        ["81.29", "81.21", "37.00", "38.11"],
+  naturlike:      ["81.30", "02.10", "02.40", "01.61", "43.12"],
+  parklike:       ["81.30", "01.19", "01.13"],
 };
 
 // Keywords searched in company names (catches companies with wrong NACE code)
 const KEYWORDS = {
-  lastebil: ["lastebil", "transport", "frakt", "spedisjon", "kjøring", "brøyting"],
-  traktor:  ["traktor", "brøyting", "snørydding", "maskinentreprenør", "jordbruk"],
-  graver:   ["graving", "gravemaskin", "entreprenør", "anlegg", "maskin", "sprengning"],
+  vinter:         ["broyting", "broeyting", "vinterdrift", "snorydding", "salting", "stroing", "brøyting", "snørydding", "strøing"],
+  trafikk:        ["trafikkdirigering", "arbeidsvarsling", "trafikkvakt", "dirigering", "vakthold", "trafikk"],
+  renhold:        ["feiing", "spyling", "renhold", "veirenhold", "tunnelrenhold", "rengjoring", "rengjøring"],
+  naturlike:      ["kantklipp", "vegetasjon", "rydding", "skogsdrift", "hogst", "skogrydding", "grasklipper"],
+  parklike:       ["gartner", "plenklipp", "park", "hageservice", "landskapspleie", "gressklipper", "blomster"],
 };
 
 // Municipality number mapping (all Norwegian municipalities 2024)
@@ -254,7 +258,13 @@ module.exports = async (req, res) => {
 
     // AI fallback if no Brreg results
     if (companies.length === 0) {
-      const eqDesc = { lastebil: "truck transport", traktor: "tractor agricultural machinery", graver: "excavator construction machinery" }[equipment] || equipment;
+      const eqDesc = {
+        vinter:    "winter road maintenance (snow plowing, salting, sanding)",
+        trafikk:   "traffic control and road work safety (trafikkdirigering, arbeidsvarsling)",
+        renhold:   "road cleaning (sweeping, pressure washing, tunnel cleaning)",
+        naturlike: "vegetation management (grass cutting, roadside clearing, tree felling)",
+        parklike:  "park and garden maintenance (lawn mowing, gardening, landscaping)",
+      }[equipment] || equipment;
       const msg = await client.messages.create({
         model: "claude-sonnet-4-6", max_tokens: 1500,
         messages: [{ role: "user", content: `Return a JSON array of 8 real Norwegian subcontractor companies for ${eqDesc} in ${location}. Output ONLY the JSON array: [{"navn":"Firma AS","orgnr":"","kommune":"${location}","nace":"Transport","ansatte":5,"stiftet":"2010","score":7,"anbefaling":"Anbefalt","begrunnelse":"Good company","risikoer":[]}]` }],
