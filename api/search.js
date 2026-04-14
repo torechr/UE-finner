@@ -8,14 +8,30 @@ const NACE = {
   graver:   ["43.12", "43.13", "42.11", "42.21", "41.20"],
 };
 
+// Kommune numbers for each location
 const KOMMUNE_NR = {
-  "arendal": ["4203"], "kristiansand": ["4204"], "grimstad": ["4202"],
-  "bergen": ["4601"], "stavanger": ["1103"], "sandnes": ["1108"],
-  "trondheim": ["5001"], "oslo": ["0301"], "drammen": ["3005"],
-  "fredrikstad": ["3004"], "sarpsborg": ["3003"], "bodø": ["1804"],
-  "tromsø": ["5401"], "ålesund": ["1507"], "molde": ["1506"],
-  "hamar": ["3403"], "lillehammer": ["3405"], "gjøvik": ["3407"],
-  "moss": ["3002"], "halden": ["3001"], "steinkjer": ["5006"],
+  "arendal": ["4203"],
+  "kristiansand": ["4204"],
+  "grimstad": ["4202"],
+  "bergen": ["4601"],
+  "stavanger": ["1103"],
+  "sandnes": ["1108"],
+  "trondheim": ["5001"],
+  "oslo": ["0301"],
+  "drammen": ["3005"],
+  "fredrikstad": ["3004"],
+  "sarpsborg": ["3003"],
+  "bodø": ["1804"],
+  "tromsø": ["5401"],
+  "ålesund": ["1507"],
+  "molde": ["1506"],
+  "hamar": ["3403"],
+  "lillehammer": ["3405"],
+  "gjøvik": ["3407"],
+  "moss": ["3002"],
+  "halden": ["3001"],
+  "steinkjer": ["5006"],
+  // Counties - list of kommune numbers
   "agder": ["4201","4202","4203","4204","4205","4206","4207","4208","4209","4210","4211","4212","4213","4214","4215","4216","4217","4218","4219","4220"],
   "vestland": ["4601","4602","4611","4612","4613","4614","4615","4616","4617","4618","4619","4620","4621","4622","4623","4624","4625","4626","4627","4628","4629","4630"],
   "rogaland": ["1101","1103","1106","1108","1111","1112","1114","1119","1120","1121","1122","1124","1127","1130","1133","1134","1135","1144","1145","1146"],
@@ -30,12 +46,7 @@ const KOMMUNE_NR = {
 
 function getKommuneNr(location) {
   const key = location.toLowerCase().trim();
-  if (KOMMUNE_NR[key]) return KOMMUNE_NR[key];
-  // Try partial match for any kommune not in hardcoded list
-  for (const [k, v] of Object.entries(KOMMUNE_NR)) {
-    if (k.includes(key) || key.includes(k)) return v;
-  }
-  return [];
+  return KOMMUNE_NR[key] || [];
 }
 
 async function brregSearchByKommune(kommuneNr, naceCodes) {
@@ -43,11 +54,17 @@ async function brregSearchByKommune(kommuneNr, naceCodes) {
   for (const nace of naceCodes) {
     try {
       const url = `https://data.brreg.no/enhetsregisteret/api/enheter?naeringskode=${nace}&kommunenummer=${kommuneNr}&size=50&konkurs=false&underAvvikling=false&organisasjonsform=AS,ENK,ANS,DA,SA,NUF,BA,STI,FLI`;
-      const res = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(12000) });
+      const res = await fetch(url, {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(12000)
+      });
       if (!res.ok) continue;
       const data = await res.json();
       if (data._embedded?.enheter) results.push(...data._embedded.enheter);
-    } catch(e) { continue; }
+    } catch(e) {
+      console.log("Brreg error:", e.message, nace, kommuneNr);
+      continue;
+    }
   }
   return results;
 }
@@ -55,24 +72,31 @@ async function brregSearchByKommune(kommuneNr, naceCodes) {
 async function brregSearch(location, naceCodes) {
   const kommuneNrs = getKommuneNr(location);
   if (kommuneNrs.length === 0) return [];
-  const toSearch = kommuneNrs.length > 5 ? kommuneNrs.slice(0, 4) : kommuneNrs;
+
   let allResults = [];
+  // For counties, search top 3 municipalities; for single, search all
+  const toSearch = kommuneNrs.length > 5 ? kommuneNrs.slice(0, 4) : kommuneNrs;
+
   for (const nr of toSearch) {
     const r = await brregSearchByKommune(nr, naceCodes);
     allResults.push(...r);
-    if (allResults.length >= 50) break;
+    if (allResults.length >= 15) break;
   }
+
+  // Deduplicate
   const seen = new Set();
   return allResults.filter(e => {
     if (seen.has(e.organisasjonsnummer)) return false;
-    seen.add(e.organisasjonsnummer); return true;
+    seen.add(e.organisasjonsnummer);
+    return true;
   });
 }
 
 async function checkBankruptcy(orgnr) {
   try {
     const res = await fetch(`https://data.brreg.no/enhetsregisteret/api/enheter/${orgnr}`, {
-      headers: { Accept: "application/json" }, signal: AbortSignal.timeout(5000),
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return false;
     const d = await res.json();
@@ -92,8 +116,10 @@ function safeParseJSON(text) {
 async function scoreCompanies(active, equipment, location) {
   if (active.length === 0) return [];
   try {
+    // Send max 15 companies to avoid token limits
     const list = active.slice(0, 15).map(c => ({
-      orgnr: c.orgnr, navn: c.navn, nace: c.nace, ansatte: c.ansatte, stiftet: c.stiftet
+      orgnr: c.orgnr, navn: c.navn, nace: c.nace,
+      ansatte: c.ansatte, stiftet: c.stiftet
     }));
     const prompt = "Score these Norwegian companies as subcontractors for " + equipment + " in " + location + ". Reply ONLY with JSON array: " + JSON.stringify(list) + " Format: [{\"orgnr\":\"123\",\"score\":7,\"anbefaling\":\"Anbefalt\",\"begrunnelse\":\"Short reason in Norwegian\",\"risikoer\":[]}] anbefaling: Anbefalt(7-10), Mulig(4-6), Lav prioritet(1-3).";
     const msg = await client.messages.create({
@@ -101,8 +127,13 @@ async function scoreCompanies(active, equipment, location) {
       messages: [{ role: "user", content: prompt }],
     });
     const text = msg.content.filter(b => b.type === "text").map(b => b.text).join("");
-    return safeParseJSON(text);
-  } catch(e) { return []; }
+    const scores = safeParseJSON(text);
+    // For remaining companies not scored, give default score
+    return scores;
+  } catch(e) {
+    console.log("Score error:", e.message);
+    return [];
+  }
 }
 
 module.exports = async (req, res) => {
@@ -113,6 +144,7 @@ module.exports = async (req, res) => {
 
     const naceCodes = NACE[equipment] || NACE.graver;
     const companies = await brregSearch(location, naceCodes);
+    console.log("Brreg resultat:", companies.length, "for", location, equipment);
 
     if (companies.length === 0) {
       const eqDesc = { lastebil: "truck transport", traktor: "tractor agricultural machinery", graver: "excavator construction machinery" }[equipment] || equipment;
@@ -133,6 +165,9 @@ module.exports = async (req, res) => {
       return {
         navn: c.navn, orgnr: c.organisasjonsnummer,
         kommune: c.forretningsadresse?.kommune || location,
+        adresse: (c.forretningsadresse?.adresse || []).join(", "),
+        postnummer: c.forretningsadresse?.postnummer || "",
+        poststed: c.forretningsadresse?.poststed || "",
         nace: c.naeringskode1?.beskrivelse || "",
         ansatte: c.antallAnsatte || 0,
         stiftet: c.stiftelsesdato ? c.stiftelsesdato.slice(0, 4) : "",
@@ -146,6 +181,8 @@ module.exports = async (req, res) => {
 
     const active = enriched.filter(c => !c.konkurs);
     const bankrupt = enriched.filter(c => c.konkurs);
+
+    // AI-score top 15 by number of employees
     const sortedForScoring = [...active].sort((a, b) => (b.ansatte || 0) - (a.ansatte || 0));
     const scores = await scoreCompanies(sortedForScoring, equipment, location);
 
