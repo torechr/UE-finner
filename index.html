@@ -5,154 +5,223 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SubFinder – Mesta AS</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <style>
-    #map { height: 420px; border-radius: 10px; border: 1px solid #30363d; margin-bottom: 14px; }
-    .leaflet-popup-content-wrapper { background: #161b22; border: 1px solid #30363d; color: #e6edf3; border-radius: 8px; }
-    .leaflet-popup-tip { background: #161b22; }
-    .leaflet-popup-content { font-family: 'DM Sans', sans-serif; font-size: 0.82rem; line-height: 1.6; }
-    .map-popup-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
-    .map-popup-score { display: inline-block; border-radius: 4px; padding: 1px 8px; font-weight: 700; font-size: 0.78rem; color: #fff; margin-bottom: 4px; }
-    .view-toggle { display: flex; gap: 7px; margin-bottom: 12px; }
-    .view-btn { padding: 6px 14px; border: 1px solid #30363d; border-radius: 7px; cursor: pointer; font-size: 0.8rem; font-weight: 600; background: #161b22; color: #8b949e; font-family: inherit; }
-    .view-btn.active { background: #f97316; border-color: #f97316; color: #fff; }
-  </style>
-  <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0d1117; color: #e6edf3; font-family: 'DM Sans', sans-serif; min-height: 100vh; }
-    a { color: #58a6ff; }
-    .header { background: linear-gradient(135deg,#161b22,#0d1117); border-bottom: 1px solid #30363d; padding: 18px 28px; display: flex; align-items: center; gap: 14px; }
-    .logo { background: linear-gradient(135deg,#f97316,#ea580c); border-radius: 10px; padding: 7px 14px; font-weight: 800; font-size: 1rem; color: #fff; }
-    .wrap { max-width: 1000px; margin: 0 auto; padding: 24px 16px; }
-    .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 22px; margin-bottom: 20px; }
-    label.lbl { display: block; font-size: 0.67rem; color: #8b949e; margin-bottom: 5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-    select { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 9px 12px; color: #e6edf3; font-size: 0.88rem; outline: none; font-family: inherit; width: 100%; }
-    .eq-row { display: flex; gap: 7px; }
-    .eq-btn { flex: 1; padding: 9px 4px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #8b949e; cursor: pointer; font-size: 0.77rem; font-weight: 600; font-family: inherit; transition: all 0.15s; }
-    .eq-btn.active { background: #f97316; border-color: #f97316; color: #fff; }
-    .btn-primary { border: none; border-radius: 8px; font-weight: 700; font-size: 0.92rem; padding: 10px 24px; background: linear-gradient(135deg,#f97316,#ea580c); color: #fff; cursor: pointer; font-family: inherit; }
-    .btn-primary:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
-    .btn-sec { background: #21262d; border: 1px solid #30363d; border-radius: 7px; padding: 6px 13px; color: #e6edf3; cursor: pointer; font-size: 0.78rem; font-weight: 600; font-family: inherit; }
-    .tab-btn { padding: 8px 16px; border: 1px solid #30363d; border-radius: 7px; cursor: pointer; font-size: 0.82rem; font-weight: 600; background: #161b22; color: #8b949e; font-family: inherit; }
-    .tab-btn.active { background: #f97316; border-color: #f97316; color: #fff; }
-    .fav-btn { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 2px 4px; opacity: 0.4; transition: opacity 0.15s; }
-    .fav-btn.saved { opacity: 1; }
+    body { background: #f4f5f7; color: #1a1a2e; font-family: 'Inter', sans-serif; min-height: 100vh; font-size: 14px; }
+    a { color: #1a5cdb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Header */
+    .header { background: #fff; border-bottom: 1px solid #e2e5ea; padding: 14px 28px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 100; }
+    .logo { background: #e85c0d; border-radius: 8px; padding: 6px 12px; font-weight: 700; font-size: 14px; color: #fff; letter-spacing: 0.02em; }
+    .header-title { font-weight: 600; font-size: 15px; color: #1a1a2e; }
+    .header-sub { font-size: 12px; color: #6b7280; }
+
+    /* Layout */
+    .wrap { max-width: 1020px; margin: 0 auto; padding: 24px 16px; }
+
+    /* Cards */
+    .card { background: #fff; border: 1px solid #e2e5ea; border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+
+    /* Form */
+    label.lbl { display: block; font-size: 11px; color: #6b7280; margin-bottom: 5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; }
+    select { background: #fff; border: 1px solid #d1d5db; border-radius: 8px; padding: 9px 12px; color: #1a1a2e; font-size: 14px; outline: none; font-family: inherit; width: 100%; transition: border-color 0.15s; }
+    select:focus { border-color: #e85c0d; box-shadow: 0 0 0 3px rgba(232,92,13,0.1); }
     .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-    .flex-sb { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-    .result { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 14px 18px; margin-bottom: 9px; }
-    .result-top { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 9px; }
-    .result-meta { color: #8b949e; font-size: 0.76rem; line-height: 1.7; margin-top: 2px; }
-    .result-nace { color: #6e7681; font-size: 0.71rem; }
-    .result-contact { color: #8b949e; font-size: 0.76rem; margin-top: 3px; }
-    .result-ai { margin-top: 9px; padding-top: 9px; border-top: 1px solid #21262d; font-size: 0.8rem; }
-    .badge { border-radius: 4px; padding: 2px 10px; font-weight: 700; font-size: 0.82rem; }
-    .status { border-radius: 4px; padding: 2px 10px; font-size: 0.78rem; font-weight: 600; border: 1px solid; }
-    .tag { font-size: 0.68rem; text-decoration: none; background: #1c2d3e; border: 1px solid #1f4976; color: #58a6ff; border-radius: 5px; padding: 3px 8px; white-space: nowrap; }
-    .tag-o { font-size: 0.68rem; text-decoration: none; background: #2d1500; border: 1px solid #7c3500; color: #f97316; border-radius: 5px; padding: 3px 8px; }
-    .risk { background: #2d1010; color: #f87171; border: 1px solid #7f1d1d; border-radius: 5px; padding: 2px 7px; font-size: 0.7rem; }
+
+    /* Equipment buttons */
+    .eq-row { display: flex; gap: 8px; }
+    .eq-btn { flex: 1; padding: 10px 8px; background: #f9fafb; border: 1px solid #e2e5ea; border-radius: 8px; color: #6b7280; cursor: pointer; font-size: 13px; font-weight: 500; font-family: inherit; transition: all 0.15s; text-align: center; }
+    .eq-btn:hover { border-color: #e85c0d; color: #e85c0d; background: #fff7f3; }
+    .eq-btn.active { background: #e85c0d; border-color: #e85c0d; color: #fff; }
+    .eq-sub { font-size: 11px; opacity: 0.75; display: block; margin-top: 2px; }
+
+    /* Buttons */
+    .btn-primary { border: none; border-radius: 8px; font-weight: 600; font-size: 14px; padding: 10px 24px; background: #e85c0d; color: #fff; cursor: pointer; font-family: inherit; transition: background 0.15s; white-space: nowrap; }
+    .btn-primary:hover { background: #c94d09; }
+    .btn-primary:disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; }
+    .btn-sec { background: #fff; border: 1px solid #d1d5db; border-radius: 7px; padding: 7px 14px; color: #374151; cursor: pointer; font-size: 13px; font-weight: 500; font-family: inherit; transition: all 0.15s; }
+    .btn-sec:hover { background: #f9fafb; border-color: #9ca3af; }
+    .btn-danger { color: #dc2626; border-color: #fca5a5; }
+    .btn-danger:hover { background: #fef2f2; }
+
+    /* Tabs */
+    .tab-btn { padding: 7px 16px; border: 1px solid #e2e5ea; border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 500; background: #fff; color: #6b7280; font-family: inherit; transition: all 0.15s; }
+    .tab-btn.active { background: #e85c0d; border-color: #e85c0d; color: #fff; }
+    .view-btn { padding: 7px 14px; border: 1px solid #e2e5ea; border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 500; background: #fff; color: #6b7280; font-family: inherit; }
+    .view-btn.active { background: #1a1a2e; border-color: #1a1a2e; color: #fff; }
+
+    /* Result cards */
+    .result { background: #fff; border: 1px solid #e2e5ea; border-radius: 10px; padding: 16px 20px; margin-bottom: 8px; border-left: 4px solid #e2e5ea; transition: box-shadow 0.15s; }
+    .result:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+    .result-name { font-weight: 600; font-size: 15px; color: #1a1a2e; }
+    .result-num { color: #9ca3af; font-size: 13px; margin-right: 6px; }
+    .result-meta { color: #6b7280; font-size: 13px; margin-top: 3px; line-height: 1.6; }
+    .result-nace { color: #9ca3af; font-size: 12px; margin-top: 2px; }
+    .result-contact { font-size: 13px; margin-top: 6px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .contact-item { display: flex; align-items: center; gap: 5px; color: #374151; }
+    .contact-icon { font-size: 13px; }
+    .result-manager { font-size: 13px; color: #374151; margin-top: 4px; }
+    .result-ai { margin-top: 10px; padding-top: 10px; border-top: 1px solid #f3f4f6; font-size: 13px; color: #4b5563; line-height: 1.6; }
+    .ai-label { font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+
+    /* Score badge – single unified badge */
+    .score-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; padding: 4px 12px; font-weight: 600; font-size: 13px; white-space: nowrap; }
+    .score-green { background: #dcfce7; color: #15803d; }
+    .score-amber { background: #fef3c7; color: #92400e; }
+    .score-red { background: #fee2e2; color: #991b1b; }
+    .score-gray { background: #f3f4f6; color: #6b7280; }
+    .score-num-dot { font-size: 11px; opacity: 0.7; }
+
+    /* Tags / links */
+    .tag { font-size: 12px; text-decoration: none; background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; border-radius: 5px; padding: 3px 9px; white-space: nowrap; }
+    .tag:hover { background: #dbeafe; }
+    .tag-o { font-size: 12px; text-decoration: none; background: #fff7ed; border: 1px solid #fed7aa; color: #c2410c; border-radius: 5px; padding: 3px 9px; }
     .tags-row { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; margin-top: 6px; }
-    .scores-row { display: flex; gap: 6px; align-items: center; }
-    .risks-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
-    .loading { text-align: center; padding: 36px; }
-    .error { background: #2d1010; border: 1px solid #7f1d1d; border-radius: 10px; padding: 16px; color: #f87171; }
-    .info-bar { margin-top: 14px; padding: 13px; background: #161b22; border: 1px solid #30363d; border-radius: 9px; color: #6e7681; font-size: 0.73rem; line-height: 1.7; }
-    .src-badge { border-radius: 4px; padding: 1px 7px; font-size: 0.7rem; font-weight: 600; border: 1px solid; margin-left: 6px; }
-    .hint { margin-top: 10px; font-size: 0.75rem; color: #8b949e; background: #0d1117; border-radius: 6px; padding: 8px 12px; border: 1px solid #21262d; }
-    .fav-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #21262d; font-size: 0.85rem; }
+
+    /* Risk / warning */
+    .risk { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 5px; padding: 2px 8px; font-size: 12px; }
+    .risks-row { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+
+    /* Fav button */
+    .fav-btn { background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px 4px; opacity: 0.35; transition: opacity 0.15s; line-height: 1; }
+    .fav-btn:hover { opacity: 0.8; }
+    .fav-btn.saved { opacity: 1; }
+
+    /* Source badge */
+    .src-badge { border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600; margin-left: 6px; }
+    .src-brreg { background: #dcfce7; color: #15803d; }
+    .src-ai { background: #fef3c7; color: #92400e; }
+
+    /* Summary bar */
+    .summary-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .summary-text { font-size: 14px; color: #374151; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 40px; }
+    .loading-icon { font-size: 32px; margin-bottom: 12px; }
+    .loading-title { font-size: 15px; font-weight: 600; color: #e85c0d; }
+    .loading-sub { font-size: 13px; color: #9ca3af; margin-top: 6px; }
+
+    /* Error */
+    .error { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 14px 18px; color: #dc2626; font-size: 14px; margin-bottom: 16px; }
+
+    /* Info bar */
+    .info-bar { margin-top: 12px; padding: 12px 16px; background: #f9fafb; border: 1px solid #e2e5ea; border-radius: 8px; color: #9ca3af; font-size: 12px; line-height: 1.7; }
+
+    /* Hint */
+    .hint { margin-top: 10px; font-size: 13px; color: #6b7280; background: #fffbeb; border-radius: 7px; padding: 8px 14px; border: 1px solid #fde68a; }
+
+    /* Fav panel */
+    .fav-item { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
     .fav-item:last-child { border-bottom: none; }
+
+    /* Map */
+    #map { height: 440px; border-radius: 10px; border: 1px solid #e2e5ea; margin-bottom: 14px; }
+    .leaflet-popup-content-wrapper { border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+    .leaflet-popup-content { font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.6; }
+    .map-popup-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; color: #1a1a2e; }
+
+    /* Misc */
     .tabs-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .flex-row { display: flex; gap: 8px; align-items: center; }
     .hidden { display: none; }
+    .bankrupt-overlay { opacity: 0.55; }
   </style>
 </head>
 <body>
+
 <div class="header">
   <div class="logo">SF</div>
   <div>
-    <div style="font-weight:700;font-size:1.15rem">SubFinder <span style="color:#f97316;font-size:0.72rem">v2</span></div>
-    <div style="color:#8b949e;font-size:0.72rem">Underentreprenør-screener · Mesta AS · Brreg + Landbruksregisteret + Claude AI</div>
+    <div class="header-title">SubFinder</div>
+    <div class="header-sub">Underentreprenør-screener · Mesta AS</div>
   </div>
   <div style="margin-left:auto">
-    <button class="btn-sec" onclick="toggleFavPanel()">⭐ Favoritter (<span id="favCount">0</span>)</button>
+    <button class="btn-sec" onclick="toggleFavPanel()">☆ Shortlist (<span id="favCount">0</span>)</button>
   </div>
 </div>
 
 <div class="wrap">
+
+  <!-- Shortlist panel -->
   <div id="favPanel" class="hidden">
     <div class="card">
-      <div style="font-weight:700;font-size:0.92rem;margin-bottom:14px;color:#f97316">⭐ Lagrede favoritter</div>
-      <div id="favList"><div style="color:#6e7681;font-size:0.85rem">Ingen favoritter lagret ennå.</div></div>
-      <div style="margin-top:12px;display:flex;gap:8px">
-        <button class="btn-sec" onclick="exportFavCSV()">📥 Eksporter CSV</button>
-        <button class="btn-sec" onclick="clearFavs()" style="color:#f87171">🗑️ Slett alle</button>
+      <div style="font-weight:600;font-size:15px;margin-bottom:14px">Shortlist</div>
+      <div id="favList"><div style="color:#9ca3af;font-size:13px">Ingen selskaper lagret ennå.</div></div>
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button class="btn-sec" onclick="exportFavCSV()">↓ Eksporter CSV</button>
+        <button class="btn-sec btn-danger" onclick="clearFavs()">Slett alle</button>
       </div>
     </div>
   </div>
 
+  <!-- Search -->
   <div class="card">
-    <div style="font-weight:700;font-size:0.92rem;margin-bottom:16px;color:#f97316">🔍 Søk etter underentreprenører</div>
     <div class="row">
       <div style="flex:1 1 200px">
-        <label class="lbl">Fylke → Kommune</label>
+        <label class="lbl">Fylke / Kommune</label>
         <select id="location">
-          <option value="">Velg fylke / kommune...</option>
-          <optgroup label="📍 Agder">
-            <option value="Agder">── Hele Agder</option>
+          <option value="">Velg område...</option>
+          <optgroup label="Agder">
+            <option value="Agder">Hele Agder (fylke)</option>
             <option>Arendal</option><option>Birkenes</option><option>Bygland</option><option>Bykle</option><option>Evje og Hornnes</option><option>Farsund</option><option>Flekkefjord</option><option>Froland</option><option>Gjerstad</option><option>Grimstad</option><option>Hægebostad</option><option>Iveland</option><option>Kristiansand</option><option>Kvinesdal</option><option>Lillesand</option><option>Lindesnes</option><option>Lyngdal</option><option>Risør</option><option>Tvedestrand</option><option>Valle</option><option>Vegårshei</option><option>Åmli</option><option>Åseral</option>
           </optgroup>
-          <optgroup label="📍 Akershus">
-            <option value="Akershus">── Hele Akershus</option>
+          <optgroup label="Akershus">
+            <option value="Akershus">Hele Akershus (fylke)</option>
             <option>Asker</option><option>Aurskog-Høland</option><option>Bærum</option><option>Enebakk</option><option>Frogn</option><option>Gjerdrum</option><option>Hurdal</option><option>Lørenskog</option><option>Nannestad</option><option>Nesodden</option><option>Nittedal</option><option>Rælingen</option><option>Ullensaker</option><option>Vestby</option><option>Ås</option>
           </optgroup>
-          <optgroup label="📍 Buskerud">
-            <option value="Buskerud">── Hele Buskerud</option>
+          <optgroup label="Buskerud">
+            <option value="Buskerud">Hele Buskerud (fylke)</option>
             <option>Drammen</option><option>Flå</option><option>Flesberg</option><option>Gol</option><option>Hemsedal</option><option>Hol</option><option>Hole</option><option>Kongsberg</option><option>Krødsherad</option><option>Lier</option><option>Modum</option><option>Nedre Eiker</option><option>Nore og Uvdal</option><option>Ringerike</option><option>Rollag</option><option>Sigdal</option><option>Øvre Eiker</option><option>Ål</option>
           </optgroup>
-          <optgroup label="📍 Finnmark">
-            <option value="Finnmark">── Hele Finnmark</option>
+          <optgroup label="Finnmark">
+            <option value="Finnmark">Hele Finnmark (fylke)</option>
             <option>Alta</option><option>Berlevåg</option><option>Båtsfjord</option><option>Gamvik</option><option>Hammerfest</option><option>Hasvik</option><option>Karasjok</option><option>Kautokeino</option><option>Lebesby</option><option>Loppa</option><option>Måsøy</option><option>Nesseby</option><option>Nordkapp</option><option>Porsanger</option><option>Sør-Varanger</option><option>Tana</option><option>Vadsø</option><option>Vardø</option>
           </optgroup>
-          <optgroup label="📍 Innlandet">
-            <option value="Innlandet">── Hele Innlandet</option>
+          <optgroup label="Innlandet">
+            <option value="Innlandet">Hele Innlandet (fylke)</option>
             <option>Alvdal</option><option>Dovre</option><option>Engerdal</option><option>Etnedal</option><option>Folldal</option><option>Gausdal</option><option>Gran</option><option>Gjøvik</option><option>Hamar</option><option>Jevnaker</option><option>Kongsvinger</option><option>Lesja</option><option>Lillehammer</option><option>Lom</option><option>Lunner</option><option>Løten</option><option>Nord-Aurdal</option><option>Nord-Fron</option><option>Nord-Odal</option><option>Nordre Land</option><option>Rendalen</option><option>Ringebu</option><option>Ringsaker</option><option>Sel</option><option>Skjåk</option><option>Sør-Aurdal</option><option>Sør-Fron</option><option>Sør-Odal</option><option>Søndre Land</option><option>Tolga</option><option>Trysil</option><option>Tynset</option><option>Vestre Slidre</option><option>Vestre Toten</option><option>Vågå</option><option>Øyer</option><option>Øystre Slidre</option><option>Østre Toten</option><option>Åsnes</option>
           </optgroup>
-          <optgroup label="📍 Møre og Romsdal">
-            <option value="Møre og Romsdal">── Hele Møre og Romsdal</option>
+          <optgroup label="Møre og Romsdal">
+            <option value="Møre og Romsdal">Hele Møre og Romsdal (fylke)</option>
             <option>Aukra</option><option>Aure</option><option>Averøy</option><option>Fjord</option><option>Fræna</option><option>Giske</option><option>Gjemnes</option><option>Haram</option><option>Hareid</option><option>Herøy</option><option>Kristiansund</option><option>Molde</option><option>Rauma</option><option>Rindal</option><option>Smøla</option><option>Stranda</option><option>Surnadal</option><option>Sykkylven</option><option>Tingvoll</option><option>Ulstein</option><option>Vanylven</option><option>Vestnes</option><option>Volda</option><option>Ørsta</option><option>Ålesund</option>
           </optgroup>
-          <optgroup label="📍 Nordland">
-            <option value="Nordland">── Hele Nordland</option>
+          <optgroup label="Nordland">
+            <option value="Nordland">Hele Nordland (fylke)</option>
             <option>Alstahaug</option><option>Andøy</option><option>Bindal</option><option>Bodø</option><option>Brønnøy</option><option>Bø</option><option>Dønna</option><option>Evenes</option><option>Fauske</option><option>Flakstad</option><option>Gildeskål</option><option>Grane</option><option>Hadsel</option><option>Hamarøy</option><option>Hattfjelldal</option><option>Hemnes</option><option>Herøy</option><option>Leirfjord</option><option>Lødingen</option><option>Meløy</option><option>Moskenes</option><option>Narvik</option><option>Nesna</option><option>Rana</option><option>Rødøy</option><option>Røst</option><option>Saltdal</option><option>Sortland</option><option>Steigen</option><option>Sømna</option><option>Sørfold</option><option>Vefsn</option><option>Vega</option><option>Vestvågøy</option><option>Værøy</option><option>Øksnes</option>
           </optgroup>
-          <optgroup label="📍 Oslo">
+          <optgroup label="Oslo">
             <option value="Oslo">Oslo</option>
           </optgroup>
-          <optgroup label="📍 Rogaland">
-            <option value="Rogaland">── Hele Rogaland</option>
+          <optgroup label="Rogaland">
+            <option value="Rogaland">Hele Rogaland (fylke)</option>
             <option>Bjerkreim</option><option>Bokn</option><option>Eigersund</option><option>Gjesdal</option><option>Hjelmeland</option><option>Hå</option><option>Karmøy</option><option>Klepp</option><option>Kvitsøy</option><option>Lund</option><option>Randaberg</option><option>Sauda</option><option>Sandnes</option><option>Sokndal</option><option>Sola</option><option>Stavanger</option><option>Strand</option><option>Time</option><option>Tysvær</option><option>Utsira</option><option>Vindafjord</option>
           </optgroup>
-          <optgroup label="📍 Telemark">
-            <option value="Telemark">── Hele Telemark</option>
+          <optgroup label="Telemark">
+            <option value="Telemark">Hele Telemark (fylke)</option>
             <option>Bamble</option><option>Bø</option><option>Drangedal</option><option>Fyresdal</option><option>Hjartdal</option><option>Kviteseid</option><option>Midt-Telemark</option><option>Nissedal</option><option>Nome</option><option>Notodden</option><option>Porsgrunn</option><option>Seljord</option><option>Siljan</option><option>Skien</option><option>Tinn</option><option>Tokke</option><option>Vinje</option>
           </optgroup>
-          <optgroup label="📍 Troms">
-            <option value="Troms">── Hele Troms</option>
+          <optgroup label="Troms">
+            <option value="Troms">Hele Troms (fylke)</option>
             <option>Balsfjord</option><option>Bardu</option><option>Dyrøy</option><option>Harstad</option><option>Ibestad</option><option>Karlsøy</option><option>Kvæfjord</option><option>Kvænangen</option><option>Kåfjord</option><option>Lavangen</option><option>Lenvik</option><option>Lyngen</option><option>Målselv</option><option>Nordreisa</option><option>Salangen</option><option>Skjervøy</option><option>Skånland</option><option>Storfjord</option><option>Sørreisa</option><option>Tjeldsund</option><option>Tranøy</option><option>Tromsø</option>
           </optgroup>
-          <optgroup label="📍 Trøndelag">
-            <option value="Trøndelag">── Hele Trøndelag</option>
+          <optgroup label="Trøndelag">
+            <option value="Trøndelag">Hele Trøndelag (fylke)</option>
             <option>Flatanger</option><option>Frosta</option><option>Frøya</option><option>Grong</option><option>Heim</option><option>Hitra</option><option>Holtålen</option><option>Høylandet</option><option>Inderøy</option><option>Indre Fosen</option><option>Leka</option><option>Levanger</option><option>Lierne</option><option>Malvik</option><option>Melhus</option><option>Meråker</option><option>Midtre Gauldal</option><option>Namsos</option><option>Namsskogan</option><option>Nærøysund</option><option>Oppdal</option><option>Orkland</option><option>Overhalla</option><option>Rennebu</option><option>Røros</option><option>Røyrvik</option><option>Selbu</option><option>Skaun</option><option>Snåsa</option><option>Steinkjer</option><option>Stjørdal</option><option>Trondheim</option><option>Tydal</option><option>Verdal</option><option>Ørland</option><option>Åfjord</option>
           </optgroup>
-          <optgroup label="📍 Vestfold">
-            <option value="Vestfold">── Hele Vestfold</option>
+          <optgroup label="Vestfold">
+            <option value="Vestfold">Hele Vestfold (fylke)</option>
             <option>Holmestrand</option><option>Horten</option><option>Larvik</option><option>Sandefjord</option><option>Svelvik</option><option>Tønsberg</option>
           </optgroup>
-          <optgroup label="📍 Vestland">
-            <option value="Vestland">── Hele Vestland</option>
+          <optgroup label="Vestland">
+            <option value="Vestland">Hele Vestland (fylke)</option>
             <option>Alver</option><option>Askøy</option><option>Askvoll</option><option>Aurland</option><option>Austevoll</option><option>Austrheim</option><option>Bergen</option><option>Bjørnafjorden</option><option>Bremanger</option><option>Bømlo</option><option>Eidfjord</option><option>Etne</option><option>Fedje</option><option>Fitjar</option><option>Fjaler</option><option>Gloppen</option><option>Gulen</option><option>Høyanger</option><option>Hyllestad</option><option>Kinn</option><option>Kvam</option><option>Kvinnherad</option><option>Lærdal</option><option>Luster</option><option>Masfjorden</option><option>Modalen</option><option>Osterøy</option><option>Samnanger</option><option>Sogndal</option><option>Solund</option><option>Stad</option><option>Stord</option><option>Stryn</option><option>Sunnfjord</option><option>Sveio</option><option>Tysnes</option><option>Ullensvang</option><option>Ulvik</option><option>Vik</option><option>Voss</option><option>Øygarden</option><option>Årdal</option>
           </optgroup>
-          <optgroup label="📍 Østfold">
-            <option value="Østfold">── Hele Østfold</option>
+          <optgroup label="Østfold">
+            <option value="Østfold">Hele Østfold (fylke)</option>
             <option>Aremark</option><option>Eidsberg</option><option>Fredrikstad</option><option>Halden</option><option>Hobøl</option><option>Hvaler</option><option>Marker</option><option>Moss</option><option>Rakkestad</option><option>Råde</option><option>Rømskog</option><option>Sarpsborg</option><option>Skiptvet</option><option>Spydeberg</option><option>Trøgstad</option><option>Våler</option>
           </optgroup>
         </select>
@@ -160,56 +229,60 @@
       <div style="flex:2 1 260px">
         <label class="lbl">Utstyrstype</label>
         <div class="eq-row">
-          <button class="eq-btn" onclick="setEq('lastebil',this)">🚛 Lastebil<br><span style="font-size:0.62rem;opacity:0.7">tungtransport</span></button>
-          <button class="eq-btn" onclick="setEq('traktor',this)">🚜 Traktor<br><span style="font-size:0.62rem;opacity:0.7">inkl. bønder</span></button>
-          <button class="eq-btn" onclick="setEq('graver',this)">🏗️ Gravemaskin<br><span style="font-size:0.62rem;opacity:0.7">anlegg</span></button>
+          <button class="eq-btn" onclick="setEq('lastebil',this)">🚛 Lastebil<span class="eq-sub">tungtransport</span></button>
+          <button class="eq-btn" onclick="setEq('traktor',this)">🚜 Traktor<span class="eq-sub">inkl. bønder</span></button>
+          <button class="eq-btn" onclick="setEq('graver',this)">🏗 Gravemaskin<span class="eq-sub">anlegg</span></button>
         </div>
       </div>
       <button class="btn-primary" id="searchBtn" onclick="doSearch()" disabled>Søk →</button>
     </div>
-    <div id="tractorHint" class="hint hidden">🌾 Traktorsøk henter fra <strong>Brreg (NACE 01.61)</strong> og <strong>Landbruksregisteret</strong> – finner bønder og ENK</div>
+    <div id="tractorHint" class="hint hidden">Traktorsøk henter fra Brreg (NACE 01.61) og Landbruksregisteret – finner også bønder og enkeltpersonforetak.</div>
   </div>
 
+  <!-- Loading -->
   <div id="loading" class="card loading hidden">
-    <div style="font-size:2rem;margin-bottom:10px">🔎</div>
-    <div style="color:#f97316;font-weight:600" id="phase">Søker...</div>
-    <div style="color:#6e7681;font-size:0.78rem;margin-top:6px">Sjekker registre og analyserer – 15–40 sek</div>
+    <div class="loading-icon">🔎</div>
+    <div class="loading-title" id="phase">Søker...</div>
+    <div class="loading-sub">Sjekker registre og analyserer med AI – 15–40 sekunder</div>
   </div>
-  <div id="errorBox" class="error hidden" style="margin-bottom:16px"></div>
 
+  <!-- Error -->
+  <div id="errorBox" class="error hidden"></div>
+
+  <!-- Results -->
   <div id="results" class="hidden">
     <div id="tabs" class="hidden tabs-row">
-      <button class="tab-btn active" id="tabCompanies" onclick="setTab('companies')">🏢 Bedrifter</button>
-      <button class="tab-btn" id="tabFarmers" onclick="setTab('farmers')">🌾 Bønder/ENK</button>
+      <button class="tab-btn active" id="tabCompanies" onclick="setTab('companies')">Bedrifter</button>
+      <button class="tab-btn" id="tabFarmers" onclick="setTab('farmers')">Bønder / ENK</button>
     </div>
-    <div class="flex-sb" style="margin-bottom:12px">
-      <div id="summary" style="color:#8b949e;font-size:0.84rem"></div>
-      <div style="display:flex;gap:7px">
-        <div class="view-toggle">
-          <button class="view-btn active" id="btnList" onclick="setView('list')">☰ Liste</button>
-          <button class="view-btn" id="btnMap" onclick="setView('map')">🗺️ Kart</button>
-        </div>
-        <button class="btn-sec" onclick="exportCSV()">📥 Eksporter CSV</button>
+    <div class="summary-bar">
+      <div id="summary" class="summary-text"></div>
+      <div class="flex-row">
+        <button class="view-btn active" id="btnList" onclick="setView('list')">☰ Liste</button>
+        <button class="view-btn" id="btnMap" onclick="setView('map')">⊞ Kart</button>
+        <button class="btn-sec" onclick="exportCSV()">↓ CSV</button>
       </div>
     </div>
     <div id="mapContainer" class="hidden"><div id="map"></div></div>
     <div id="cards"></div>
     <div class="info-bar">
-      <strong style="color:#8b949e">Kilder:</strong> Brønnøysundregistrene (åpent API) · Landbruksregisteret · Claude AI ·
-      <strong style="color:#f87171"> Verifiser alltid</strong> org.nr og hent skatteattest før kontraktsinngåelse.
+      Kilder: Brønnøysundregistrene · Landbruksregisteret · Claude AI &nbsp;·&nbsp;
+      <strong style="color:#dc2626">Verifiser alltid</strong> org.nr og innhent skatteattest før kontraktsinngåelse.
     </div>
   </div>
-</div>
+
+</div><!-- /wrap -->
 
 <script>
-let eq="",companiesData=[],farmersData=[],currentTab="companies",currentSource="";
+let eq="",companiesData=[],farmersData=[],currentTab="companies",currentSource="",currentView="list";
 let favourites=JSON.parse(localStorage.getItem("subfinder_favs")||"[]");
+let map=null,markers=[];
 
 document.getElementById("location").addEventListener("change",updateBtn);
 updateFavCount();
 
-function setEq(val,btn){eq=val;document.querySelectorAll(".eq-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");document.getElementById("tractorHint").classList.toggle("hidden",val!=="traktor");updateBtn();}
-function updateBtn(){const loc=document.getElementById("location").value;document.getElementById("searchBtn").disabled=!loc||!eq;}
+function setEq(v,btn){eq=v;document.querySelectorAll(".eq-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");document.getElementById("tractorHint").classList.toggle("hidden",v!=="traktor");updateBtn();}
+function updateBtn(){document.getElementById("searchBtn").disabled=!document.getElementById("location").value||!eq;}
 function show(id){document.getElementById(id).classList.remove("hidden");}
 function hide(id){document.getElementById(id).classList.add("hidden");}
 function setPhase(msg){document.getElementById("phase").textContent=msg;}
@@ -225,164 +298,172 @@ async function doSearch(){
     if(d1.error)throw new Error(d1.error);
     companiesData=d1.companies||[];currentSource=d1.source||"";
     if(eq==="traktor"){
-      setPhase("Søker i Landbruksregisteret etter bønder/ENK...");
+      setPhase("Søker i Landbruksregisteret...");
       const r2=await fetch("/api/farmers",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({location})});
       const d2=await r2.json();
       if(!d2.error)farmersData=d2.farmers||[];
     }
     hide("loading");renderResults(location);
-  }catch(e){hide("loading");const eb=document.getElementById("errorBox");eb.textContent="⚠️ "+e.message;show("errorBox");}
+  }catch(e){hide("loading");document.getElementById("errorBox").textContent="⚠ "+e.message;show("errorBox");}
 }
 
-function setTab(tab){currentTab=tab;document.getElementById("tabCompanies").classList.toggle("active",tab==="companies");document.getElementById("tabFarmers").classList.toggle("active",tab==="farmers");renderCards();}
+function setTab(t){currentTab=t;document.getElementById("tabCompanies").classList.toggle("active",t==="companies");document.getElementById("tabFarmers").classList.toggle("active",t==="farmers");renderCards();}
 
 function renderResults(location){
-  const icons={lastebil:"🚛",traktor:"🚜",graver:"🏗️"};
+  const eqLabel={lastebil:"Lastebil",traktor:"Traktor",graver:"Gravemaskin"}[eq];
+  if(farmersData.length>0){
+    document.getElementById("tabCompanies").textContent="Bedrifter ("+companiesData.length+")";
+    document.getElementById("tabFarmers").textContent="Bønder / ENK ("+farmersData.length+")";
+    show("tabs");
+  }else{hide("tabs");}
   const bc=companiesData.filter(c=>c.score===0).length;
-  if(farmersData.length>0){document.getElementById("tabCompanies").textContent="🏢 Bedrifter ("+companiesData.length+")";document.getElementById("tabFarmers").textContent="🌾 Bønder/ENK ("+farmersData.length+")";document.getElementById("tabs").style.display="flex";document.getElementById("tabs").classList.remove("hidden");}else{hide("tabs");}
-  let s="<strong style='color:#e6edf3'>"+companiesData.length+" selskaper</strong> · "+location+" · "+icons[eq];
-  if(currentSource==="brreg")s+="<span class='src-badge' style='background:#0d2818;color:#4ade80;border-color:#166534'>Brreg</span>";
-  if(currentSource==="ai")s+="<span class='src-badge' style='background:#2d1b00;color:#fbbf24;border-color:#92400e'>AI</span>";
-  if(bc>0)s+="<span class='src-badge' style='background:#2d0a0a;color:#f87171;border-color:#7f1d1d'>⚠️ "+bc+" konkurs</span>";
+  let s=`<strong>${companiesData.length} selskaper</strong> · ${location} · ${eqLabel}`;
+  if(currentSource==="brreg")s+=`<span class="src-badge src-brreg">Brreg</span>`;
+  if(currentSource==="ai")s+=`<span class="src-badge src-ai">AI</span>`;
+  if(bc>0)s+=`<span class="src-badge" style="background:#fee2e2;color:#991b1b">⚠ ${bc} konkurs</span>`;
   document.getElementById("summary").innerHTML=s;
   renderCards();show("results");
 }
 
-function isFav(orgnr){return favourites.some(f=>f.orgnr===orgnr);}
-function toggleFav(company){const idx=favourites.findIndex(f=>f.orgnr===company.orgnr);if(idx>=0)favourites.splice(idx,1);else favourites.push(company);localStorage.setItem("subfinder_favs",JSON.stringify(favourites));updateFavCount();renderCards();if(!document.getElementById("favPanel").classList.contains("hidden"))renderFavPanel();}
+function isFav(o){return favourites.some(f=>f.orgnr===o);}
+function toggleFav(c){const i=favourites.findIndex(f=>f.orgnr===c.orgnr);if(i>=0)favourites.splice(i,1);else favourites.push(c);localStorage.setItem("subfinder_favs",JSON.stringify(favourites));updateFavCount();renderCards();if(!document.getElementById("favPanel").classList.contains("hidden"))renderFavPanel();}
 function updateFavCount(){document.getElementById("favCount").textContent=favourites.length;}
 function toggleFavPanel(){document.getElementById("favPanel").classList.toggle("hidden");if(!document.getElementById("favPanel").classList.contains("hidden"))renderFavPanel();}
-function renderFavPanel(){const list=document.getElementById("favList");if(favourites.length===0){list.innerHTML="<div style='color:#6e7681;font-size:0.85rem'>Ingen favoritter lagret ennå.</div>";return;}list.innerHTML=favourites.map(f=>`<div class="fav-item"><div><strong>${f.navn}</strong><span style="color:#6e7681;margin-left:8px;font-size:0.78rem">${f.orgnr||""} · ${f.kommune||""}</span></div><div style="display:flex;gap:6px;align-items:center">${f.orgnr?`<a class="tag" href="https://www.proff.no/search?q=${f.orgnr}" target="_blank">📊 Proff</a>`:""}<button class="btn-sec" style="font-size:0.72rem;padding:3px 8px;color:#f87171" onclick="removeFav('${f.orgnr}')">✕</button></div></div>`).join("");}
-function removeFav(orgnr){favourites=favourites.filter(f=>f.orgnr!==orgnr);localStorage.setItem("subfinder_favs",JSON.stringify(favourites));updateFavCount();renderFavPanel();}
-function clearFavs(){if(confirm("Slett alle favoritter?")){favourites=[];localStorage.setItem("subfinder_favs",JSON.stringify(favourites));updateFavCount();renderFavPanel();}}
+function renderFavPanel(){
+  const list=document.getElementById("favList");
+  if(!favourites.length){list.innerHTML="<div style='color:#9ca3af;font-size:13px'>Ingen selskaper lagret ennå.</div>";return;}
+  list.innerHTML=favourites.map(f=>`<div class="fav-item"><div><strong>${f.navn}</strong><span style="color:#9ca3af;margin-left:8px;font-size:12px">${f.orgnr||""} · ${f.kommune||""}</span></div><div style="display:flex;gap:6px;align-items:center">${f.orgnr?`<a class="tag" href="https://www.proff.no/search?q=${f.orgnr}" target="_blank">Proff</a>`:""}<button class="btn-sec btn-danger" style="font-size:12px;padding:3px 8px" onclick="removeFav('${f.orgnr}')">✕</button></div></div>`).join("");}
+function removeFav(o){favourites=favourites.filter(f=>f.orgnr!==o);localStorage.setItem("subfinder_favs",JSON.stringify(favourites));updateFavCount();renderFavPanel();}
+function clearFavs(){if(confirm("Slett alle fra shortlist?")){favourites=[];localStorage.setItem("subfinder_favs",JSON.stringify(favourites));updateFavCount();renderFavPanel();}}
+
+function scoreBadge(r){
+  if(r.score===0||r.anbefaling==="Konkurs")return`<span class="score-badge score-gray">Konkurs</span>`;
+  const cls=r.score>=7?"score-green":r.score>=5?"score-amber":"score-red";
+  return`<span class="score-badge ${cls}">${r.anbefaling} <span class="score-num-dot">${r.score}/10</span></span>`;
+}
+
+function borderColor(r){
+  if(r.score===0)return"#fca5a5";
+  if(r.score>=7)return"#86efac";
+  if(r.score>=5)return"#fcd34d";
+  return"#fca5a5";
+}
 
 function renderCards(){
   const data=currentTab==="farmers"?farmersData:companiesData;
   const container=document.getElementById("cards");
-  if(data.length===0){container.innerHTML="<div class='card' style='text-align:center;color:#8b949e;padding:32px'>Ingen "+(currentTab==="farmers"?"landbruksforetak":"selskaper")+" funnet. Prøv et annet område.</div>";return;}
+  if(!data.length){container.innerHTML=`<div class="card" style="text-align:center;color:#9ca3af;padding:32px">Ingen ${currentTab==="farmers"?"landbruksforetak":"selskaper"} funnet. Prøv et annet område.</div>`;return;}
   container.innerHTML=data.map((r,i)=>{
     const bankrupt=r.score===0||r.anbefaling==="Konkurs";
-    const lc=bankrupt?"#7f1d1d":r.score>=7?"#00c853":r.score>=5?"#ff9800":"#f44336";
-    const sb=r.score===0?"#7f1d1d":r.score>=7?"#00c853":r.score>=5?"#ff9800":"#f44336";
-    const st=r.score===0?"Konkurs":`${r.score}/10`;
-    const sm={"Anbefalt":["#0d2818","#4ade80","#166534"],"Mulig":["#2d1b00","#fbbf24","#92400e"],"Lav prioritet":["#2d0a0a","#f87171","#7f1d1d"],"Konkurs":["#2d0a0a","#f87171","#7f1d1d"]};
-    const [sBg,sCol,sBorder]=sm[r.anbefaling]||sm["Mulig"];
     const fs=r.orgnr&&isFav(r.orgnr);
-    const links=!bankrupt&&r.orgnr?`<a class="tag" href="https://info.altinn.no/skjemaoversikt/skatteetaten/bestilling-av-opplysninger-om-skatt-og-avgift-rf-1507/" target="_blank">🧾 Skatteattest</a><a class="tag" href="https://www.proff.no/search?q=${r.orgnr}" target="_blank">📊 Proff</a><a class="tag" href="https://www.startbank.no" target="_blank">🏦 StartBANK</a>`:!bankrupt?`<a class="tag-o" href="https://brreg.no/finn-foretak/?name=${encodeURIComponent(r.navn)}" target="_blank">🔍 Søk i Brreg</a>`:"";
-    const risks=(r.risikoer||[]).map(x=>`<span class="risk">⚠️ ${x}</span>`).join("");
-    const tj=r.tjenester?.length?`<span style="margin-left:8px;color:#6e7681;font-size:0.7rem">${r.tjenester.join(" · ")}</span>`:"";
-    const cp=[];if(r.telefon)cp.push("📞 "+r.telefon);if(r.epost)cp.push(`✉️ <a href="mailto:${r.epost}" style="color:#58a6ff">${r.epost}</a>`);if(r.nettside)cp.push(`🌐 <a href="${r.nettside}" target="_blank" style="color:#58a6ff">${r.nettside.replace(/https?:\/\//,"")}</a>`);
-    const ch=cp.length?`<div class="result-contact">${cp.join(" · ")}</div>`:"";
-    const dl=r.dagligLeder?`<div class="result-contact">👤 <strong>Daglig leder:</strong> ${r.dagligLeder}</div>`:"";
-    const w=[];if(!r.ansatte||r.ansatte===0)w.push("<span class='risk'>⚠️ Ingen registrerte ansatte</span>");
-    return `<div class="result" style="border-left:3px solid ${lc};opacity:${bankrupt?0.75:1}"><div class="result-top"><div style="flex:1;min-width:160px"><div style="font-weight:700;font-size:0.93rem;margin-bottom:3px"><span style="color:#484f58;margin-right:6px">#${i+1}</span>${r.navn}${tj}${r.orgnr?`<button class="fav-btn${fs?" saved":""}" onclick='toggleFav(${JSON.stringify(r).replace(/'/g,"&#39;")})' title="${fs?"Fjern":"Lagre som favoritt"}">${fs?"⭐":"☆"}</button>`:""}</div><div class="result-meta">${r.orgnr?`Org.nr: ${r.orgnr} · `:""}${r.kommune||""}${r.stiftet?` · Est. ${r.stiftet}`:""}${r.ansatte>0?` · ${r.ansatte} ansatte`:""}${r.organisasjonsform?` · ${r.organisasjonsform}`:""}</div>${r.nace?`<div class="result-nace">${r.nace}</div>`:""}${dl}${ch}</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><div class="scores-row"><span class="badge" style="background:${sb};color:#fff">${st}</span><span class="status" style="background:${sBg};color:${sCol};border-color:${sBorder}">${r.anbefaling}</span></div><div class="tags-row">${links}</div></div></div><div class="result-ai"><span style="color:#8b949e">AI: </span>${r.begrunnelse}<div class="risks-row">${w.join("")}${risks}</div></div></div>`;
+    const links=!bankrupt&&r.orgnr
+      ?`<a class="tag" href="https://info.altinn.no/skjemaoversikt/skatteetaten/bestilling-av-opplysninger-om-skatt-og-avgift-rf-1507/" target="_blank">Skatteattest</a>
+         <a class="tag" href="https://www.proff.no/search?q=${r.orgnr}" target="_blank">Proff</a>
+         <a class="tag" href="https://www.startbank.no" target="_blank">StartBANK</a>`
+      :!bankrupt?`<a class="tag-o" href="https://brreg.no/finn-foretak/?name=${encodeURIComponent(r.navn)}" target="_blank">Søk i Brreg</a>`:"";
+    const risks=(r.risikoer||[]).map(x=>`<span class="risk">⚠ ${x}</span>`).join("");
+    const noAnsatte=(!r.ansatte||r.ansatte===0)?`<span class="risk">Ingen registrerte ansatte</span>`:"";
+    // Contact – phone prominently first
+    let contactHTML="";
+    if(r.telefon)contactHTML+=`<span class="contact-item"><span class="contact-icon">📞</span><a href="tel:${r.telefon.replace(/\s/g,'')}" style="color:#1a1a2e;font-weight:500">${r.telefon}</a></span>`;
+    if(r.epost)contactHTML+=`<span class="contact-item"><span class="contact-icon">✉</span><a href="mailto:${r.epost}">${r.epost}</a></span>`;
+    if(r.nettside)contactHTML+=`<span class="contact-item"><span class="contact-icon">↗</span><a href="${r.nettside}" target="_blank">${r.nettside.replace(/https?:\/\//,"")}</a></span>`;
+    return`<div class="result${bankrupt?" bankrupt-overlay":""}" style="border-left-color:${borderColor(r)}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span class="result-num">#${i+1}</span>
+            <span class="result-name">${r.navn}</span>
+            ${r.orgnr?`<button class="fav-btn${fs?" saved":""}" onclick='toggleFav(${JSON.stringify(r).replace(/'/g,"&#39;")})' title="${fs?"Fjern fra shortlist":"Legg til shortlist"}">${fs?"★":"☆"}</button>`:""}
+          </div>
+          <div class="result-meta">
+            ${r.orgnr?`Org.nr: <strong>${r.orgnr}</strong> · `:""}${r.kommune||""}${r.stiftet?` · Est. ${r.stiftet}`:""}${r.ansatte>0?` · ${r.ansatte} ansatte`:""}${r.organisasjonsform?` · ${r.organisasjonsform}`:""}
+          </div>
+          ${r.nace?`<div class="result-nace">${r.nace}</div>`:""}
+          ${r.dagligLeder?`<div class="result-manager">Daglig leder: <strong>${r.dagligLeder}</strong></div>`:""}
+          ${contactHTML?`<div class="result-contact">${contactHTML}</div>`:""}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
+          ${scoreBadge(r)}
+          <div class="tags-row">${links}</div>
+        </div>
+      </div>
+      <div class="result-ai">
+        <div class="ai-label">AI-vurdering</div>
+        ${r.begrunnelse||"–"}
+        <div class="risks-row">${noAnsatte}${risks}</div>
+      </div>
+    </div>`;
   }).join("");
 }
 
-function exportCSV(){const data=currentTab==="farmers"?farmersData:companiesData;const loc=document.getElementById("location").value;const h=["Navn","Org.nr","Kommune","Bransje","Ansatte","Stiftet","Org.form","Daglig leder","Telefon","Epost","Score","Anbefaling","Begrunnelse","Risikoer","Skatteattest","Proff"];const rows=data.map(r=>[r.navn,r.orgnr||"",r.kommune||"",r.nace||"",r.ansatte||"",r.stiftet||"",r.organisasjonsform||"",r.dagligLeder||"",r.telefon||"",r.epost||"",r.score,r.anbefaling,r.begrunnelse,(r.risikoer||[]).join(" / "),r.orgnr?`https://info.altinn.no/skjemaoversikt/skatteetaten/bestilling-av-opplysninger-om-skatt-og-avgift-rf-1507/`:"",r.orgnr?`https://www.proff.no/search?q=${r.orgnr}`:""]);const csv=[h,...rows].map(r=>r.map(v=>`"${String(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));a.download=`subfinder_${loc}_${eq}.csv`;a.click();}
-function exportFavCSV(){const h=["Navn","Org.nr","Kommune","Score","Anbefaling","Telefon","Epost","Proff"];const rows=favourites.map(r=>[r.navn,r.orgnr||"",r.kommune||"",r.score,r.anbefaling,r.telefon||"",r.epost||"",r.orgnr?`https://www.proff.no/search?q=${r.orgnr}`:""]);const csv=[h,...rows].map(r=>r.map(v=>`"${String(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));a.download="subfinder_favoritter.csv";a.click();}
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script>
-let map = null;
-let currentView = "list";
-let markers = [];
-
-function setView(view) {
-  currentView = view;
-  document.getElementById("btnList").classList.toggle("active", view === "list");
-  document.getElementById("btnMap").classList.toggle("active", view === "map");
-  document.getElementById("cards").classList.toggle("hidden", view === "map");
-  document.getElementById("mapContainer").classList.toggle("hidden", view === "list");
-  if (view === "map") renderMap();
+function setView(v){
+  currentView=v;
+  document.getElementById("btnList").classList.toggle("active",v==="list");
+  document.getElementById("btnMap").classList.toggle("active",v==="map");
+  document.getElementById("cards").classList.toggle("hidden",v==="map");
+  document.getElementById("mapContainer").classList.toggle("hidden",v==="list");
+  if(v==="map")renderMap();
 }
 
-async function geocode(company) {
-  // Try with full address first, fall back to kommune
-  const queries = [];
-  if (company.adresse && company.postnummer) {
-    queries.push(`${company.adresse}, ${company.postnummer} ${company.poststed}, Norway`);
-  }
-  if (company.postnummer) {
-    queries.push(`${company.postnummer} ${company.poststed}, Norway`);
-  }
-  queries.push(`${company.kommune}, Norway`);
+function exportCSV(){
+  const data=currentTab==="farmers"?farmersData:companiesData;
+  const loc=document.getElementById("location").value;
+  const h=["Navn","Org.nr","Kommune","Bransje","Ansatte","Stiftet","Org.form","Daglig leder","Telefon","Epost","Score","Anbefaling","Begrunnelse","Risikoer","Skatteattest","Proff"];
+  const rows=data.map(r=>[r.navn,r.orgnr||"",r.kommune||"",r.nace||"",r.ansatte||"",r.stiftet||"",r.organisasjonsform||"",r.dagligLeder||"",r.telefon||"",r.epost||"",r.score,r.anbefaling,r.begrunnelse,(r.risikoer||[]).join(" / "),r.orgnr?"https://info.altinn.no/skjemaoversikt/skatteetaten/bestilling-av-opplysninger-om-skatt-og-avgift-rf-1507/":"",r.orgnr?`https://www.proff.no/search?q=${r.orgnr}`:""]);
+  const csv=[h,...rows].map(r=>r.map(v=>`"${String(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));a.download=`subfinder_${loc}_${eq}.csv`;a.click();
+}
+function exportFavCSV(){
+  const h=["Navn","Org.nr","Kommune","Score","Anbefaling","Daglig leder","Telefon","Epost","Proff"];
+  const rows=favourites.map(r=>[r.navn,r.orgnr||"",r.kommune||"",r.score,r.anbefaling,r.dagligLeder||"",r.telefon||"",r.epost||"",r.orgnr?`https://www.proff.no/search?q=${r.orgnr}`:""]);
+  const csv=[h,...rows].map(r=>r.map(v=>`"${String(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));a.download="subfinder_shortlist.csv";a.click();
+}
+</script>
 
-  for (const q of queries) {
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
-        headers: { "Accept-Language": "no", "User-Agent": "SubFinder/2.0 Mesta" }
-      });
-      const data = await res.json();
-      if (data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-    } catch { continue; }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+async function geocode(c){
+  const queries=[];
+  if(c.adresse&&c.postnummer)queries.push(`${c.adresse}, ${c.postnummer} ${c.poststed}, Norway`);
+  if(c.postnummer)queries.push(`${c.postnummer} ${c.poststed}, Norway`);
+  queries.push(`${c.kommune}, Norway`);
+  for(const q of queries){
+    try{
+      const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`,{headers:{"Accept-Language":"no","User-Agent":"SubFinder/2.0 Mesta"}});
+      const d=await res.json();
+      if(d.length)return{lat:parseFloat(d[0].lat),lng:parseFloat(d[0].lon)};
+    }catch{continue;}
   }
   return null;
 }
 
-async function renderMap() {
-  const data = currentTab === "farmers" ? farmersData : companiesData;
-  if (data.length === 0) return;
-
-  // Init map if not already
-  if (!map) {
-    map = L.map("map");
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
-      maxZoom: 18,
-    }).addTo(map);
+async function renderMap(){
+  const data=currentTab==="farmers"?farmersData:companiesData;
+  if(!data.length)return;
+  if(!map){
+    map=L.map("map");
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
   }
-
-  // Clear existing markers
-  markers.forEach(m => m.remove());
-  markers = [];
-
-  // Show loading state
-  document.getElementById("map").style.opacity = "0.6";
-
-  // Geocode top 25 companies (avoid rate limiting)
-  const toGeocode = data.filter(c => c.anbefaling !== "Konkurs").slice(0, 25);
-  const bounds = [];
-
-  for (const company of toGeocode) {
-    const coords = await geocode(company);
-    if (!coords) continue;
-
-    // Add small random offset so overlapping markers are visible
-    const lat = coords.lat + (Math.random() - 0.5) * 0.002;
-    const lng = coords.lng + (Math.random() - 0.5) * 0.002;
-
-    const scoreColor = company.score >= 7 ? "#00c853" : company.score >= 5 ? "#ff9800" : "#f44336";
-    const icon = L.divIcon({
-      className: "",
-      html: `<div style="background:${scoreColor};color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.75rem;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.5)">${company.score}</div>`,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
-    });
-
-    const contactLine = [company.telefon, company.epost].filter(Boolean).join(" · ");
-    const popup = `
-      <div class="map-popup-name">${company.navn}</div>
-      <span class="map-popup-score" style="background:${scoreColor}">${company.score}/10 ${company.anbefaling}</span><br>
-      <span style="color:#8b949e;font-size:0.75rem">${company.orgnr || ""} · ${company.nace || ""}</span><br>
-      ${company.ansatte > 0 ? `<span style="color:#8b949e;font-size:0.75rem">👥 ${company.ansatte} ansatte</span><br>` : ""}
-      ${contactLine ? `<span style="color:#8b949e;font-size:0.75rem">📞 ${contactLine}</span><br>` : ""}
-      ${company.adresse ? `<span style="color:#6e7681;font-size:0.72rem">${company.adresse}, ${company.postnummer} ${company.poststed}</span>` : ""}
-    `;
-
-    const marker = L.marker([lat, lng], { icon }).addTo(map).bindPopup(popup);
-    markers.push(marker);
-    bounds.push([lat, lng]);
-
-    // Small delay to avoid Nominatim rate limit
-    await new Promise(r => setTimeout(r, 150));
+  markers.forEach(m=>m.remove());markers=[];
+  document.getElementById("map").style.opacity="0.5";
+  const toGeo=data.filter(c=>c.anbefaling!=="Konkurs").slice(0,25);
+  const bounds=[];
+  for(const c of toGeo){
+    const coords=await geocode(c);
+    if(!coords)continue;
+    const lat=coords.lat+(Math.random()-0.5)*0.002;
+    const lng=coords.lng+(Math.random()-0.5)*0.002;
+    const col=c.score>=7?"#16a34a":c.score>=5?"#d97706":"#dc2626";
+    const icon=L.divIcon({className:"",html:`<div style="background:${col};color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.25)">${c.score}</div>`,iconSize:[30,30],iconAnchor:[15,15]});
+    const pop=`<div class="map-popup-name">${c.navn}</div><div style="font-size:12px;color:#6b7280">${c.orgnr||""} · ${c.nace||""}</div>${c.ansatte>0?`<div style="font-size:12px">👥 ${c.ansatte} ansatte</div>`:""}<div style="font-size:12px">${c.anbefaling} · ${c.score}/10</div>${c.telefon?`<div style="font-size:12px">📞 ${c.telefon}</div>`:""}`;
+    markers.push(L.marker([lat,lng],{icon}).addTo(map).bindPopup(pop));
+    bounds.push([lat,lng]);
+    await new Promise(r=>setTimeout(r,150));
   }
-
-  document.getElementById("map").style.opacity = "1";
-
-  if (bounds.length > 0) {
-    map.fitBounds(bounds, { padding: [40, 40] });
-  }
+  document.getElementById("map").style.opacity="1";
+  if(bounds.length)map.fitBounds(bounds,{padding:[40,40]});
 }
 </script>
 </body>
