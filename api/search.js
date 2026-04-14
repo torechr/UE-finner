@@ -9,7 +9,7 @@ const NACE = {
   trafikk:        ["80.10", "52.21", "74.90", "43.99"],
   renhold:        ["81.29", "81.21", "37.00", "38.11"],
   naturlike:      ["81.30", "02.10", "02.40", "01.61", "43.12"],
-  parklike:       ["81.30", "01.19", "01.13"],
+  parklike:       ["81.30", "01.19", "01.13", "02.10", "02.40"],
   graving:        ["43.12", "43.13", "42.11", "42.21", "41.20", "43.99"],
 };
 
@@ -20,8 +20,8 @@ const KEYWORDS = {
   vintertraktor:  ["brøyting", "broyting", "traktor", "vinterdrift", "snørydding", "snorydding"],
   trafikk:        ["trafikkdirigering", "arbeidsvarsling", "trafikkvakt", "dirigering", "vakthold", "trafikk"],
   renhold:        ["feiing", "spyling", "renhold", "veirenhold", "tunnelrenhold", "rengjoring", "rengjøring"],
-  naturlike:      ["kantklipp", "vegetasjon", "rydding", "skogsdrift", "hogst", "skogrydding", "grasklipper"],
-  parklike:       ["gartner", "plenklipp", "park", "hageservice", "landskapspleie", "gressklipper", "blomster"],
+  naturlike:      ["kantklipp", "vegetasjon", "rydding", "skogsdrift", "hogst", "skogrydding", "grasklipper", "arborist", "trepleie", "trefelling"],
+  parklike:       ["gartner", "plenklipp", "park", "hageservice", "landskapspleie", "gressklipper", "blomster", "arborist", "trepleie", "beskjaering"],
   graving:        ["gravemaskin", "graving", "hjulgraver", "beltegraver", "minigraver", "maskinentreprenor", "maskinentreprenør", "anleggsmaskin"],
 };
 
