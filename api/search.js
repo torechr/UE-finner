@@ -11,6 +11,7 @@ const NACE = {
   naturlike:      ["81.30", "02.10", "02.40", "01.61", "43.12"],
   parklike:       ["81.30", "01.19", "01.13", "02.10", "02.40"],
   graving:        ["43.12", "43.13", "42.11", "42.21", "41.20", "43.99"],
+  pukkverk:       ["08.11", "08.12", "23.70", "49.41"],
 };
 
 const KEYWORDS = {
@@ -22,6 +23,7 @@ const KEYWORDS = {
   naturlike:      ["kantklipp", "vegetasjon", "skoging", "skogrydding", "skogsdrift", "hogst", "grasklipper", "arborist", "trepleie", "trefelling"],
   parklike:       ["gartner", "plenklipp", "park", "hageservice", "landskapspleie", "gressklipper", "blomster", "arborist", "trepleie", "beskjaering"],
   graving:        ["gravemaskin", "graving", "hjulgraver", "beltegraver", "minigraver", "maskinentreprenor", "maskinentreprenør", "anleggsmaskin"],
+  pukkverk:       ["pukkverk", "steinbrudd", "grustak", "pukk", "grus", "knust", "singel", "tilslag", "steinknusing"],
 };
 
 // Municipality number mapping (all Norwegian municipalities 2024)
@@ -241,6 +243,7 @@ async function scoreCompanies(companies, equipment, location) {
       naturlike:      "kantklipp, skoging og vegetasjonsrydding langs veg. Traktor med kantklipperutstyr eller motorsag.",
       parklike:       "plenklipp, gartnertjenester og trepleie i vegomgivelser. Gjerne godkjent arborist for trearbeid.",
       graving:        "graving og maskinentreprenortjenester. Hjulgraver, beltegraver eller minigraver etter oppdragsstorrelse.",
+      pukkverk:       "levering av pukk, grus og steinmaterialer til vegformål. Knust fjell, naturlig grus, singel og tilslagsmaterialer i ulike fraksjoner.",
     }[equipment] || equipment;
 
     const prompt = `Du er innkjopsekspert for Mesta AS, Norges ledende vegentreprenor. Mesta utforer drift og vedlikehold av riks- og fylkesveger pa vegne av Statens vegvesen og fylkeskommuner.
@@ -296,6 +299,7 @@ module.exports = async (req, res) => {
         naturlike:      "vegetation management (grass cutting, roadside clearing, tree felling)",
         parklike:       "park and garden maintenance (lawn mowing, gardening, landscaping)",
         graving:        "excavation services (hjulgraver, beltegraver, minigraver, maskinentreprenor)",
+        pukkverk:       "quarry and gravel supply (pukkverk, steinbrudd, grustak - crushed rock, gravel, aggregates for road construction)",
       }[equipment] || equipment;
       const msg = await client.messages.create({
         model: "claude-sonnet-4-6", max_tokens: 1500,
