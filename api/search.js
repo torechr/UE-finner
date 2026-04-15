@@ -54,11 +54,11 @@ const KOMMUNE_NR = {
   "nannestad":["3217"],"nesodden":["3219"],"nittedal":["3221"],"rælingen":["3223"],
   "ullensaker":["3225"],"vestby":["3227"],"ås":["3229"],
   // Buskerud
-  "drammen":["3301"],"flå":["3307"],"flesberg":["3309"],"gol":["3311"],
-  "hemsedal":["3313"],"hol":["3315"],"hole":["3317"],"kongsberg":["3303"],
-  "krødsherad":["3319"],"lier":["3321"],"modum":["3323"],"nedre eiker":["3325"],
-  "nore og uvdal":["3327"],"ringerike":["3301"],"rollag":["3329"],"sigdal":["3331"],
-  "øvre eiker":["3333"],"ål":["3305"],
+  "drammen":["3301"],"flå":["3320"],"flesberg":["3334"],"gol":["3324"],
+  "hemsedal":["3326"],"hol":["3330"],"hole":["3310"],"kongsberg":["3303"],
+  "krødsherad":["3318"],"lier":["3312"],"modum":["3316"],"nesbyen":["3322"],
+  "nore og uvdal":["3338"],"ringerike":["3305"],"rollag":["3336"],"sigdal":["3332"],
+  "øvre eiker":["3314"],"ål":["3328"],
   // Finnmark
   // Finnmark (verified 2024 numbers from Brreg)
   "alta":["5601"],"hammerfest":["5603"],"sør-varanger":["5605"],"vadsø":["5607"],
@@ -78,13 +78,13 @@ const KOMMUNE_NR = {
   "tynset":["3469"],"vestre slidre":["3471"],"vestre toten":["3473"],"vågå":["3475"],
   "øyer":["3477"],"øystre slidre":["3479"],"østre toten":["3481"],"åsnes":["3483"],
   // More og Romsdal
-  "aukra":["1508"],"aure":["1511"],"averøy":["1514"],"fjord":["1515"],
+  "aukra":["1547"],"aure":["1511"],"averøy":["1514"],"fjord":["1515"],
   "fræna":["1516"],"giske":["1517"],"gjemnes":["1519"],"haram":["1520"],
   "hareid":["1523"],"herøy":["1524"],"kristiansund":["1505"],"molde":["1506"],
   "rauma":["1526"],"rindal":["1528"],"smøla":["1531"],"stranda":["1532"],
   "surnadal":["1535"],"sykkylven":["1539"],"tingvoll":["1543"],"ulstein":["1545"],
   "vanylven":["1546"],"vestnes":["1547"],"volda":["1548"],"ørsta":["1551"],
-  "ålesund":["1507"],
+  "ålesund":["1508"],
   // Nordland
   "alstahaug":["1811"],"andøy":["1812"],"bindal":["1813"],"bodø":["1804"],
   "brønnøy":["1815"],"bø":["1816"],"dønna":["1818"],"evenes":["1820"],
@@ -128,8 +128,8 @@ const KOMMUNE_NR = {
   "snåsa":["5031"],"steinkjer":["5006"],"stjørdal":["5014"],"trondheim":["5001"],
   "tydal":["5032"],"verdal":["5021"],"ørland":["5033"],"åfjord":["5034"],
   // Vestfold
-  "holmestrand":["3901"],"horten":["3903"],"larvik":["3905"],"sandefjord":["3907"],
-  "svelvik":["3909"],"tønsberg":["3911"],
+  "holmestrand":["3903"],"horten":["3901"],"larvik":["3909"],"sandefjord":["3907"],
+  "tønsberg":["3905"],
   // Vestland
   "alver":["4611"],"askøy":["4612"],"askvoll":["4613"],"aurland":["4614"],
   "austevoll":["4615"],"austrheim":["4616"],"bergen":["4601"],"bjørnafjorden":["4617"],
@@ -160,13 +160,38 @@ const KOMMUNE_NR = {
   "telemark":["4001","4003","4005","4010","4012","4014","4016","4018","4020","4022","4024","4026","4028","4030","4032","4034","4036"],
   "troms":["5501","5503","5510","5512","5514","5516","5518","5520","5522","5524","5526","5528","5530","5532","5534","5536","5538","5540","5542","5544","5546"],
   "trøndelag":["5001","5006","5007","5014","5020","5021","5025","5027","5028","5029","5030","5031","5032","5033","5034","5036","5037","5038","5041","5042","5043","5044","5045","5046","5047","5049","5052","5053","5054","5055","5056","5057","5058","5059","5060","5061"],
-  "vestfold":["3901","3903","3905","3907","3909","3911"],
+  "vestfold":["3901","3903","3905","3907","3909"],
   "vestland":["4601","4611","4612","4613","4614","4615","4616","4617","4618","4619","4620","4621","4622","4623","4624","4625","4626","4627","4628","4629","4630","4631","4632","4633","4634","4635","4636","4637","4638","4639","4640","4641","4642","4643","4644","4645","4646","4647","4648","4649","4650","4651"],
   "østfold":["3101","3103","3105","3107","3110","3112","3114","3116","3118","3120","3122","3124"],
 };
 
-function getKommuneNr(location) {
-  return KOMMUNE_NR[location.toLowerCase().trim()] || [];
+// Cache for dynamic kommune lookups
+const kommuneCache = new Map();
+
+async function getKommuneNr(location) {
+  const key = location.toLowerCase().trim();
+
+  // Check hardcoded list first (counties and known municipalities)
+  if (KOMMUNE_NR[key]) return KOMMUNE_NR[key];
+
+  // Check cache
+  if (kommuneCache.has(key)) return kommuneCache.get(key);
+
+  // Dynamic lookup from Brreg
+  try {
+    const data = await brregFetch(
+      `https://data.brreg.no/enhetsregisteret/api/enheter?navn=${encodeURIComponent(key)}+kommune&organisasjonsform=KOMM&size=1`
+    );
+    const enhet = data?._embedded?.enheter?.[0];
+    if (enhet?.forretningsadresse?.kommunenummer) {
+      const nr = [enhet.forretningsadresse.kommunenummer];
+      kommuneCache.set(key, nr);
+      return nr;
+    }
+  } catch {}
+
+  kommuneCache.set(key, []);
+  return [];
 }
 
 async function brregFetch(url) {
@@ -194,7 +219,7 @@ async function brregSearchByKommune(kommuneNr, naceCodes, keywords, purposeKeywo
 }
 
 async function brregSearch(location, naceCodes, keywords, purposeKeywords, complete=false) {
-  const kommuneNrs = getKommuneNr(location);
+  const kommuneNrs = await getKommuneNr(location);
   if (kommuneNrs.length === 0) return [];
 
   const isCounty = kommuneNrs.length > 5;
