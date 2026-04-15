@@ -284,29 +284,13 @@ module.exports = async (req, res) => {
 
     const naceCodes = NACE[equipment] || NACE.graving;
     const keywords = KEYWORDS[equipment] || [];
-    
-    const companies = await brregSearch(location, naceCodes, keywords);
+    const purposeKeywords = PURPOSE_KEYWORDS[equipment] || [];
+    const complete = req.body.complete === true;
+    const companies = await brregSearch(location, naceCodes, keywords, purposeKeywords, complete);
     console.log(`Brreg: ${companies.length} treff for ${location}/${equipment}`);
 
-    // AI fallback if no Brreg results
     if (companies.length === 0) {
-      const eqDesc = {
-        vinter:         "winter road maintenance (snow plowing, salting, sanding)",
-        vinterlastebil: "winter road maintenance with trucks (snow plowing, salting)",
-        vintertraktor:  "winter road maintenance with tractors (snow plowing, sanding)",
-        trafikk:        "traffic control and road work safety (trafikkdirigering, arbeidsvarsling)",
-        renhold:        "road cleaning (sweeping, pressure washing, tunnel cleaning)",
-        naturlike:      "vegetation management (grass cutting, roadside clearing, tree felling)",
-        parklike:       "park and garden maintenance (lawn mowing, gardening, landscaping)",
-        graving:        "excavation services (hjulgraver, beltegraver, minigraver, maskinentreprenor)",
-        pukkverk:       "quarry and gravel supply (pukkverk, steinbrudd, grustak - crushed rock, gravel, aggregates for road construction)",
-      }[equipment] || equipment;
-      const msg = await client.messages.create({
-        model: "claude-sonnet-4-6", max_tokens: 1500,
-        messages: [{ role: "user", content: `Return a JSON array of 8 real Norwegian subcontractor companies for ${eqDesc} in ${location}. Output ONLY the JSON array: [{"navn":"Firma AS","orgnr":"","kommune":"${location}","nace":"Transport","ansatte":5,"stiftet":"2010","score":7,"anbefaling":"Anbefalt","begrunnelse":"Good company","risikoer":[]}]` }],
-      });
-      const parsed = safeParseJSON(msg.content.find(b => b.type === "text")?.text || "");
-      return res.json({ companies: parsed.sort((a, b) => (b.score||0)-(a.score||0)), source: "ai" });
+      return res.json({ companies: [], source: "brreg" });
     }
 
     // Enrich all companies - fetch manager only for top 15 (sorted by employees)
