@@ -105,6 +105,10 @@
     .project-sel:focus { border-color: #e85c0d; }
     .project-new-input { border: 1px solid #d1d5db; border-radius: 7px; padding: 6px 12px; font-size: 13px; font-family: inherit; outline: none; flex: 1; min-width: 160px; }
     .project-new-input:focus { border-color: #e85c0d; }
+    .loc-item { padding: 8px 16px; cursor: pointer; font-size: 14px; color: #1a1a2e; }
+    .loc-item:hover, .loc-item.loc-hover { background: #f3f4f6; }
+    .loc-county { font-weight: 500; color: #e85c0d; }
+    #locationInput:focus { border-color: #e85c0d; box-shadow: 0 0 0 3px rgba(232,92,13,0.1); }
 
     /* ── Mobile responsive ───────────────────────── */
     @media (max-width: 640px) {
@@ -197,68 +201,13 @@
   <!-- Search -->
   <div class="card">
     <div class="row">
-      <div style="flex:1 1 200px">
+      <div style="flex:1 1 200px;position:relative">
         <label class="lbl">Fylke / Kommune</label>
-        <select id="location">
-          <option value="">Velg område...</option>
-          <optgroup label="Agder">
-            <option value="Agder">Hele Agder (fylke)</option>
-            <option>Arendal</option><option>Birkenes</option><option>Bygland</option><option>Bykle</option><option>Evje og Hornnes</option><option>Farsund</option><option>Flekkefjord</option><option>Froland</option><option>Gjerstad</option><option>Grimstad</option><option>Hægebostad</option><option>Iveland</option><option>Kristiansand</option><option>Kvinesdal</option><option>Lillesand</option><option>Lindesnes</option><option>Lyngdal</option><option>Risør</option><option>Tvedestrand</option><option>Valle</option><option>Vegårshei</option><option>Åmli</option><option>Åseral</option>
-          </optgroup>
-          <optgroup label="Akershus">
-            <option value="Akershus">Hele Akershus (fylke)</option>
-            <option>Asker</option><option>Aurskog-Høland</option><option>Bærum</option><option>Enebakk</option><option>Frogn</option><option>Gjerdrum</option><option>Hurdal</option><option>Lørenskog</option><option>Nannestad</option><option>Nesodden</option><option>Nittedal</option><option>Rælingen</option><option>Ullensaker</option><option>Vestby</option><option>Ås</option>
-          </optgroup>
-          <optgroup label="Buskerud">
-            <option value="Buskerud">Hele Buskerud (fylke)</option>
-            <option>Drammen</option><option>Flå</option><option>Flesberg</option><option>Gol</option><option>Hemsedal</option><option>Hol</option><option>Hole</option><option>Kongsberg</option><option>Krødsherad</option><option>Lier</option><option>Modum</option><option>Nedre Eiker</option><option>Nore og Uvdal</option><option>Ringerike</option><option>Rollag</option><option>Sigdal</option><option>Øvre Eiker</option><option>Ål</option>
-          </optgroup>
-          <optgroup label="Finnmark">
-            <option value="Finnmark">Hele Finnmark (fylke)</option>
-            <option>Alta</option><option>Berlevåg</option><option>Båtsfjord</option><option>Gamvik</option><option>Hammerfest</option><option>Hasvik</option><option>Karasjok</option><option>Kautokeino</option><option>Lebesby</option><option>Loppa</option><option>Måsøy</option><option>Nesseby</option><option>Nordkapp</option><option>Porsanger</option><option>Sør-Varanger</option><option>Tana</option><option>Vadsø</option><option>Vardø</option>
-          </optgroup>
-          <optgroup label="Innlandet">
-            <option value="Innlandet">Hele Innlandet (fylke)</option>
-            <option>Alvdal</option><option>Dovre</option><option>Engerdal</option><option>Etnedal</option><option>Folldal</option><option>Gausdal</option><option>Gran</option><option>Gjøvik</option><option>Hamar</option><option>Jevnaker</option><option>Kongsvinger</option><option>Lesja</option><option>Lillehammer</option><option>Lom</option><option>Lunner</option><option>Løten</option><option>Nord-Aurdal</option><option>Nord-Fron</option><option>Nord-Odal</option><option>Nordre Land</option><option>Rendalen</option><option>Ringebu</option><option>Ringsaker</option><option>Sel</option><option>Skjåk</option><option>Sør-Aurdal</option><option>Sør-Fron</option><option>Sør-Odal</option><option>Søndre Land</option><option>Tolga</option><option>Trysil</option><option>Tynset</option><option>Vestre Slidre</option><option>Vestre Toten</option><option>Vågå</option><option>Øyer</option><option>Øystre Slidre</option><option>Østre Toten</option><option>Åsnes</option>
-          </optgroup>
-          <optgroup label="Møre og Romsdal">
-            <option value="Møre og Romsdal">Hele Møre og Romsdal (fylke)</option>
-            <option>Aukra</option><option>Aure</option><option>Averøy</option><option>Fjord</option><option>Fræna</option><option>Giske</option><option>Gjemnes</option><option>Haram</option><option>Hareid</option><option>Herøy</option><option>Kristiansund</option><option>Molde</option><option>Rauma</option><option>Rindal</option><option>Smøla</option><option>Stranda</option><option>Surnadal</option><option>Sykkylven</option><option>Tingvoll</option><option>Ulstein</option><option>Vanylven</option><option>Vestnes</option><option>Volda</option><option>Ørsta</option><option>Ålesund</option>
-          </optgroup>
-          <optgroup label="Nordland">
-            <option value="Nordland">Hele Nordland (fylke)</option>
-            <option>Alstahaug</option><option>Andøy</option><option>Bindal</option><option>Bodø</option><option>Brønnøy</option><option>Bø</option><option>Dønna</option><option>Evenes</option><option>Fauske</option><option>Flakstad</option><option>Gildeskål</option><option>Grane</option><option>Hadsel</option><option>Hamarøy</option><option>Hattfjelldal</option><option>Hemnes</option><option>Herøy</option><option>Leirfjord</option><option>Lødingen</option><option>Meløy</option><option>Moskenes</option><option>Narvik</option><option>Nesna</option><option>Rana</option><option>Rødøy</option><option>Røst</option><option>Saltdal</option><option>Sortland</option><option>Steigen</option><option>Sømna</option><option>Sørfold</option><option>Vefsn</option><option>Vega</option><option>Vestvågøy</option><option>Værøy</option><option>Øksnes</option>
-          </optgroup>
-          <optgroup label="Oslo"><option value="Oslo">Oslo</option></optgroup>
-          <optgroup label="Rogaland">
-            <option value="Rogaland">Hele Rogaland (fylke)</option>
-            <option>Bjerkreim</option><option>Bokn</option><option>Eigersund</option><option>Gjesdal</option><option>Hjelmeland</option><option>Hå</option><option>Karmøy</option><option>Klepp</option><option>Kvitsøy</option><option>Lund</option><option>Randaberg</option><option>Sauda</option><option>Sandnes</option><option>Sokndal</option><option>Sola</option><option>Stavanger</option><option>Strand</option><option>Time</option><option>Tysvær</option><option>Utsira</option><option>Vindafjord</option>
-          </optgroup>
-          <optgroup label="Telemark">
-            <option value="Telemark">Hele Telemark (fylke)</option>
-            <option>Bamble</option><option>Bø</option><option>Drangedal</option><option>Fyresdal</option><option>Hjartdal</option><option>Kviteseid</option><option>Midt-Telemark</option><option>Nissedal</option><option>Nome</option><option>Notodden</option><option>Porsgrunn</option><option>Seljord</option><option>Siljan</option><option>Skien</option><option>Tinn</option><option>Tokke</option><option>Vinje</option>
-          </optgroup>
-          <optgroup label="Troms">
-            <option value="Troms">Hele Troms (fylke)</option>
-            <option>Balsfjord</option><option>Bardu</option><option>Dyrøy</option><option>Harstad</option><option>Ibestad</option><option>Karlsøy</option><option>Kvæfjord</option><option>Kvænangen</option><option>Kåfjord</option><option>Lavangen</option><option>Lenvik</option><option>Lyngen</option><option>Målselv</option><option>Nordreisa</option><option>Salangen</option><option>Skjervøy</option><option>Skånland</option><option>Storfjord</option><option>Sørreisa</option><option>Tjeldsund</option><option>Tranøy</option><option>Tromsø</option>
-          </optgroup>
-          <optgroup label="Trøndelag">
-            <option value="Trøndelag">Hele Trøndelag (fylke)</option>
-            <option>Flatanger</option><option>Frosta</option><option>Frøya</option><option>Grong</option><option>Heim</option><option>Hitra</option><option>Holtålen</option><option>Høylandet</option><option>Inderøy</option><option>Indre Fosen</option><option>Leka</option><option>Levanger</option><option>Lierne</option><option>Malvik</option><option>Melhus</option><option>Meråker</option><option>Midtre Gauldal</option><option>Namsos</option><option>Namsskogan</option><option>Nærøysund</option><option>Oppdal</option><option>Orkland</option><option>Overhalla</option><option>Rennebu</option><option>Røros</option><option>Røyrvik</option><option>Selbu</option><option>Skaun</option><option>Snåsa</option><option>Steinkjer</option><option>Stjørdal</option><option>Trondheim</option><option>Tydal</option><option>Verdal</option><option>Ørland</option><option>Åfjord</option>
-          </optgroup>
-          <optgroup label="Vestfold">
-            <option value="Vestfold">Hele Vestfold (fylke)</option>
-            <option>Holmestrand</option><option>Horten</option><option>Larvik</option><option>Sandefjord</option><option>Svelvik</option><option>Tønsberg</option>
-          </optgroup>
-          <optgroup label="Vestland">
-            <option value="Vestland">Hele Vestland (fylke)</option>
-            <option>Alver</option><option>Askøy</option><option>Askvoll</option><option>Aurland</option><option>Austevoll</option><option>Austrheim</option><option>Bergen</option><option>Bjørnafjorden</option><option>Bremanger</option><option>Bømlo</option><option>Eidfjord</option><option>Etne</option><option>Fedje</option><option>Fitjar</option><option>Fjaler</option><option>Gloppen</option><option>Gulen</option><option>Høyanger</option><option>Hyllestad</option><option>Kinn</option><option>Kvam</option><option>Kvinnherad</option><option>Lærdal</option><option>Luster</option><option>Masfjorden</option><option>Modalen</option><option>Osterøy</option><option>Samnanger</option><option>Sogndal</option><option>Solund</option><option>Stad</option><option>Stord</option><option>Stryn</option><option>Sunnfjord</option><option>Sveio</option><option>Tysnes</option><option>Ullensvang</option><option>Ulvik</option><option>Vik</option><option>Voss</option><option>Øygarden</option><option>Årdal</option>
-          </optgroup>
-          <optgroup label="Østfold">
-            <option value="Østfold">Hele Østfold (fylke)</option>
-            <option>Aremark</option><option>Eidsberg</option><option>Fredrikstad</option><option>Halden</option><option>Hobøl</option><option>Hvaler</option><option>Marker</option><option>Moss</option><option>Rakkestad</option><option>Råde</option><option>Rømskog</option><option>Sarpsborg</option><option>Skiptvet</option><option>Spydeberg</option><option>Trøgstad</option><option>Våler</option>
-          </optgroup>
-        </select>
+        <input type="text" id="locationInput" placeholder="Skriv kommune eller fylke..." autocomplete="off"
+          style="background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:9px 12px;color:#1a1a2e;font-size:16px;outline:none;font-family:inherit;width:100%"
+          oninput="filterLocations()" onfocus="showDropdown()" onblur="setTimeout(hideDropdown,200)" onkeydown="onLocKey(event)" />
+        <div id="locationDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #d1d5db;border-radius:8px;max-height:260px;overflow-y:auto;z-index:200;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.1)"></div>
+        <input type="hidden" id="location" />
       </div>
       <div style="flex:2 1 300px">
         <label class="lbl">Tjenestekategori <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#9ca3af">(velg én eller flere)</span></label>
@@ -376,8 +325,93 @@ function setStatus(orgnr,status){
   localStorage.setItem("subfinder_projects",JSON.stringify(projects));
 }
 
-loadProjects();
-document.getElementById("location").addEventListener("change",updateBtn);
+// All locations grouped by county
+const LOCATION_DATA = [
+  {group:"Agder", items:["Hele Agder (fylke)|Agder","Arendal","Birkenes","Bygland","Bykle","Evje og Hornnes","Farsund","Flekkefjord","Froland","Gjerstad","Grimstad","Hægebostad","Iveland","Kristiansand","Kvinesdal","Lillesand","Lindesnes","Lyngdal","Risør","Tvedestrand","Valle","Vegårshei","Åmli","Åseral"]},
+  {group:"Akershus", items:["Hele Akershus (fylke)|Akershus","Asker","Aurskog-Høland","Bærum","Enebakk","Frogn","Gjerdrum","Hurdal","Lørenskog","Nannestad","Nesodden","Nittedal","Rælingen","Ullensaker","Vestby","Ås"]},
+  {group:"Buskerud", items:["Hele Buskerud (fylke)|Buskerud","Drammen","Flå","Flesberg","Gol","Hemsedal","Hol","Hole","Kongsberg","Krødsherad","Lier","Modum","Nedre Eiker","Nore og Uvdal","Ringerike","Rollag","Sigdal","Øvre Eiker","Ål"]},
+  {group:"Finnmark", items:["Hele Finnmark (fylke)|Finnmark","Alta","Berlevåg","Båtsfjord","Gamvik","Hammerfest","Hasvik","Karasjok","Kautokeino","Lebesby","Loppa","Måsøy","Nesseby","Nordkapp","Porsanger","Sør-Varanger","Tana","Vadsø","Vardø"]},
+  {group:"Innlandet", items:["Hele Innlandet (fylke)|Innlandet","Alvdal","Dovre","Engerdal","Etnedal","Folldal","Gausdal","Gran","Gjøvik","Hamar","Jevnaker","Kongsvinger","Lesja","Lillehammer","Lom","Lunner","Løten","Nord-Aurdal","Nord-Fron","Nord-Odal","Nordre Land","Rendalen","Ringebu","Ringsaker","Sel","Skjåk","Sør-Aurdal","Sør-Fron","Sør-Odal","Søndre Land","Tolga","Trysil","Tynset","Vestre Slidre","Vestre Toten","Vågå","Øyer","Øystre Slidre","Østre Toten","Åsnes"]},
+  {group:"Møre og Romsdal", items:["Hele Møre og Romsdal (fylke)|Møre og Romsdal","Aukra","Aure","Averøy","Fjord","Fræna","Giske","Gjemnes","Haram","Hareid","Herøy","Kristiansund","Molde","Rauma","Rindal","Smøla","Stranda","Surnadal","Sykkylven","Tingvoll","Ulstein","Vanylven","Vestnes","Volda","Ørsta","Ålesund"]},
+  {group:"Nordland", items:["Hele Nordland (fylke)|Nordland","Alstahaug","Andøy","Bindal","Bodø","Brønnøy","Bø","Dønna","Evenes","Fauske","Flakstad","Gildeskål","Grane","Hadsel","Hamarøy","Hattfjelldal","Hemnes","Herøy","Leirfjord","Lødingen","Meløy","Moskenes","Narvik","Nesna","Rana","Rødøy","Røst","Saltdal","Sortland","Steigen","Sømna","Sørfold","Vefsn","Vega","Vestvågøy","Værøy","Øksnes"]},
+  {group:"Oslo", items:["Oslo"]},
+  {group:"Rogaland", items:["Hele Rogaland (fylke)|Rogaland","Bjerkreim","Bokn","Eigersund","Gjesdal","Hjelmeland","Hå","Karmøy","Klepp","Kvitsøy","Lund","Randaberg","Sauda","Sandnes","Sokndal","Sola","Stavanger","Strand","Time","Tysvær","Utsira","Vindafjord"]},
+  {group:"Telemark", items:["Hele Telemark (fylke)|Telemark","Bamble","Bø","Drangedal","Fyresdal","Hjartdal","Kviteseid","Midt-Telemark","Nissedal","Nome","Notodden","Porsgrunn","Seljord","Siljan","Skien","Tinn","Tokke","Vinje"]},
+  {group:"Troms", items:["Hele Troms (fylke)|Troms","Balsfjord","Bardu","Dyrøy","Harstad","Ibestad","Karlsøy","Kvæfjord","Kvænangen","Kåfjord","Lavangen","Lenvik","Lyngen","Målselv","Nordreisa","Salangen","Skjervøy","Skånland","Storfjord","Sørreisa","Tjeldsund","Tranøy","Tromsø"]},
+  {group:"Trøndelag", items:["Hele Trøndelag (fylke)|Trøndelag","Flatanger","Frosta","Frøya","Grong","Heim","Hitra","Holtålen","Høylandet","Inderøy","Indre Fosen","Leka","Levanger","Lierne","Malvik","Melhus","Meråker","Midtre Gauldal","Namsos","Namsskogan","Nærøysund","Oppdal","Orkland","Overhalla","Rennebu","Røros","Røyrvik","Selbu","Skaun","Snåsa","Steinkjer","Stjørdal","Trondheim","Tydal","Verdal","Ørland","Åfjord"]},
+  {group:"Vestfold", items:["Hele Vestfold (fylke)|Vestfold","Holmestrand","Horten","Larvik","Sandefjord","Svelvik","Tønsberg"]},
+  {group:"Vestland", items:["Hele Vestland (fylke)|Vestland","Alver","Askøy","Askvoll","Aurland","Austevoll","Austrheim","Bergen","Bjørnafjorden","Bremanger","Bømlo","Eidfjord","Etne","Fedje","Fitjar","Fjaler","Gloppen","Gulen","Høyanger","Hyllestad","Kinn","Kvam","Kvinnherad","Lærdal","Luster","Masfjorden","Modalen","Osterøy","Samnanger","Sogndal","Solund","Stad","Stord","Stryn","Sunnfjord","Sveio","Tysnes","Ullensvang","Ulvik","Vik","Voss","Øygarden","Årdal"]},
+  {group:"Østfold", items:["Hele Østfold (fylke)|Østfold","Aremark","Eidsberg","Fredrikstad","Halden","Hobøl","Hvaler","Marker","Moss","Rakkestad","Råde","Rømskog","Sarpsborg","Skiptvet","Spydeberg","Trøgstad","Våler"]},
+];
+
+let dropdownIdx = -1;
+
+function getLabel(item){ return item.includes("|") ? item.split("|")[0] : item; }
+function getValue(item){ return item.includes("|") ? item.split("|")[1] : item; }
+
+function filterLocations(){
+  const q = document.getElementById("locationInput").value.trim().toLowerCase();
+  document.getElementById("location").value = "";
+  updateBtn();
+  if(!q){ showDropdown(); return; }
+  const matches = [];
+  for(const g of LOCATION_DATA){
+    for(const item of g.items){
+      if(getLabel(item).toLowerCase().includes(q)) matches.push({group:g.group, item});
+    }
+  }
+  renderDropdown(matches, q);
+}
+
+function showDropdown(){
+  const q = document.getElementById("locationInput").value.trim().toLowerCase();
+  if(q) { filterLocations(); return; }
+  // Show all grouped
+  const all = LOCATION_DATA.map(g => g.items.map(item => ({group:g.group, item}))).flat();
+  renderDropdown(all, "");
+}
+
+function renderDropdown(items, q){
+  const dd = document.getElementById("locationDropdown");
+  if(!items.length){ dd.style.display="none"; return; }
+  let html = "";
+  let lastGroup = "";
+  items.forEach((m,i) => {
+    if(m.group !== lastGroup){
+      html += `<div style="padding:6px 12px 3px;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em">${m.group}</div>`;
+      lastGroup = m.group;
+    }
+    const label = getLabel(m.item);
+    const isCounty = m.item.includes("|");
+    const highlighted = q ? label.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'), s=>`<strong>${s}</strong>`) : label;
+    html += `<div class="loc-item${isCounty?" loc-county":""}" data-idx="${i}" data-value="${getValue(m.item)}" data-label="${label}" onmousedown="selectLocation('${getValue(m.item)}','${label.replace(/'/g,"\\'")}')">
+      ${highlighted}
+    </div>`;
+  });
+  dd.innerHTML = html;
+  dd.style.display = "block";
+  dropdownIdx = -1;
+}
+
+function hideDropdown(){
+  document.getElementById("locationDropdown").style.display = "none";
+}
+
+function selectLocation(value, label){
+  document.getElementById("locationInput").value = label;
+  document.getElementById("location").value = value;
+  document.getElementById("locationDropdown").style.display = "none";
+  updateBtn();
+}
+
+function onLocKey(e){
+  const dd = document.getElementById("locationDropdown");
+  const items = dd.querySelectorAll(".loc-item");
+  if(e.key==="ArrowDown"){ e.preventDefault(); dropdownIdx=Math.min(dropdownIdx+1,items.length-1); items.forEach((el,i)=>el.classList.toggle("loc-hover",i===dropdownIdx)); items[dropdownIdx]?.scrollIntoView({block:"nearest"}); }
+  else if(e.key==="ArrowUp"){ e.preventDefault(); dropdownIdx=Math.max(dropdownIdx-1,0); items.forEach((el,i)=>el.classList.toggle("loc-hover",i===dropdownIdx)); items[dropdownIdx]?.scrollIntoView({block:"nearest"}); }
+  else if(e.key==="Enter"&&dropdownIdx>=0){ items[dropdownIdx]?.dispatchEvent(new MouseEvent("mousedown")); }
+  else if(e.key==="Escape"){ hideDropdown(); }
+}
 updateFavCount();
 
 function setEq(v,btn){
