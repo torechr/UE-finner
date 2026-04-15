@@ -280,15 +280,19 @@ Vekt: riktig kompetanse > kapasitet > erfaring/alder > storrelse.`;
 module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
   try {
-    const { location, equipment } = req.body;
-    if (!location || !equipment) return res.status(400).json({ error: "Mangler location eller equipment" });
+    const { location, equipment, equipments, complete } = req.body;
 
-    const naceCodes = NACE[equipment] || NACE.graving;
-    const keywords = KEYWORDS[equipment] || [];
-    const purposeKeywords = PURPOSE_KEYWORDS[equipment] || [];
-    const complete = req.body.complete === true;
-    const companies = await brregSearch(location, naceCodes, keywords, purposeKeywords, complete);
-    console.log(`Brreg: ${companies.length} treff for ${location}/${equipment}`);
+    // Support single or multiple categories
+    const eqList = equipments && equipments.length > 0 ? equipments : [equipment];
+    if (!location || !eqList[0]) return res.status(400).json({ error: "Mangler location eller equipment" });
+
+    // Merge NACE, keywords and purposeKeywords from all categories
+    const allNace = [...new Set(eqList.flatMap(eq => NACE[eq] || []))];
+    const allKeywords = [...new Set(eqList.flatMap(eq => KEYWORDS[eq] || []))];
+    const allPurpose = [...new Set(eqList.flatMap(eq => PURPOSE_KEYWORDS[eq] || []))];
+
+    const companies = await brregSearch(location, allNace, allKeywords, allPurpose, complete === true);
+    console.log(`Brreg: ${companies.length} treff for ${location}/${eqList.join('+')}`);
 
     if (companies.length === 0) {
       return res.json({ companies: [], source: "brreg" });
@@ -327,7 +331,7 @@ module.exports = async (req, res) => {
 
     const active = enriched.filter(c => !c.konkurs);
     const bankrupt = enriched.filter(c => c.konkurs);
-    const scores = await scoreCompanies(active, equipment, location);
+    const scores = await scoreCompanies(active, eqList.join("+"), location);
 
     // Merge scores
     const scoreMap = new Map(scores.map(s => [s.orgnr, s]));
