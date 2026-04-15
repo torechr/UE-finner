@@ -437,23 +437,12 @@ async function doSearch(complete=false){
   setPhase(complete?"Komplett fylkessøk – henter alle kommuner...":"Søker i Brønnøysundregistrene...");
   companiesData=[];farmersData=[];
   try{
-    // Search all selected categories in parallel
-    const results = await Promise.all([...eqs].map(equipment=>
-      fetch("/api/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({location,equipment,complete})})
-        .then(r=>r.json())
-    ));
-    // Merge and deduplicate by orgnr
-    const seen=new Set();
-    const merged=[];
-    for(const d of results){
-      if(d.error)continue;
-      for(const c of d.companies||[]){
-        if(!seen.has(c.orgnr)){seen.add(c.orgnr);merged.push(c);}
-      }
-    }
-    // Sort by score desc
-    companiesData=merged.sort((a,b)=>(b.score||0)-(a.score||0));
-    currentSource=results[0]?.source||"";
+    const r=await fetch("/api/search",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({location, equipments:[...eqs], complete})});
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    companiesData=d.companies||[];
+    currentSource=d.source||"";
     hide("loading");renderResults(location);
   }catch(e){hide("loading");document.getElementById("errorBox").textContent="⚠ "+e.message;show("errorBox");}
 }
