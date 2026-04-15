@@ -311,35 +311,50 @@ module.exports = async (req, res) => {
       return res.json({ companies: [], source: "brreg" });
     }
 
-    // Enrich all companies - fetch manager only for top 15 (sorted by employees)
-    const top = companies.slice(0, 50);
-    const sortedByAnsatte = [...top].sort((a, b) => (b.antallAnsatte||0) - (a.antallAnsatte||0));
-    const topOrgNrs = new Set(sortedByAnsatte.slice(0, 15).map(c => c.organisasjonsnummer));
+    // Enrich all companies - fetch manager for ALL (batched to avoid timeout)
+    const top = companies.slice(0, 100);
 
-    const enriched = await Promise.all(top.map(async c => {
-      const hasEmployees = (c.antallAnsatte || 0) > 0;
-      const fetchManager = topOrgNrs.has(c.organisasjonsnummer);
-      const [isBankrupt, dagligLeder] = await Promise.all([
-        hasEmployees ? checkBankruptcy(c.organisasjonsnummer) : Promise.resolve(false),
-        fetchManager ? fetchDagligLeder(c.organisasjonsnummer) : Promise.resolve(""),
-      ]);
-      return {
-        navn: c.navn,
-        orgnr: c.organisasjonsnummer,
-        kommune: c.forretningsadresse?.kommune || location,
-        adresse: (c.forretningsadresse?.adresse || []).join(", "),
-        postnummer: c.forretningsadresse?.postnummer || "",
-        poststed: c.forretningsadresse?.poststed || "",
-        nace: c.naeringskode1?.beskrivelse || "",
-        ansatte: c.antallAnsatte || 0,
-        stiftet: c.stiftelsesdato?.slice(0, 4) || "",
-        organisasjonsform: c.organisasjonsform?.beskrivelse || "",
-        telefon: c.telefon || c.mobil || "",
-        epost: c.epostadresse || "",
-        nettside: c.hjemmeside || "",
-        dagligLeder,
-        konkurs: isBankrupt,
-      };
+    // Batch dagligLeder fetches: 10 at a time to stay within timeout
+    async function fetchAllManagers(list) {
+      const results = new Map();
+      for (let i = 0; i < list.length; i += 10) {
+        const batch = list.slice(i, i + 10);
+        const batchResults = await Promise.all(
+          batch.map(c => fetchDagligLeder(c.organisasjonsnummer)
+            .then(name => [c.organisasjonsnummer, name])
+            .catch(() => [c.organisasjonsnummer, ""])
+          )
+        );
+        batchResults.forEach(([orgnr, name]) => results.set(orgnr, name));
+      }
+      return results;
+    }
+
+    const [managerMap, bankruptResults] = await Promise.all([
+      fetchAllManagers(top),
+      Promise.all(top.map(c =>
+        (c.antallAnsatte || 0) > 0
+          ? checkBankruptcy(c.organisasjonsnummer).catch(() => false)
+          : Promise.resolve(false)
+      ))
+    ]);
+
+    const enriched = top.map((c, idx) => ({
+      navn: c.navn,
+      orgnr: c.organisasjonsnummer,
+      kommune: c.forretningsadresse?.kommune || location,
+      adresse: (c.forretningsadresse?.adresse || []).join(", "),
+      postnummer: c.forretningsadresse?.postnummer || "",
+      poststed: c.forretningsadresse?.poststed || "",
+      nace: c.naeringskode1?.beskrivelse || "",
+      ansatte: c.antallAnsatte || 0,
+      stiftet: c.stiftelsesdato?.slice(0, 4) || "",
+      organisasjonsform: c.organisasjonsform?.beskrivelse || "",
+      telefon: c.telefon || c.mobil || "",
+      epost: c.epostadresse || "",
+      nettside: c.hjemmeside || "",
+      dagligLeder: managerMap.get(c.organisasjonsnummer) || "",
+      konkurs: bankruptResults[idx],
     }));
 
     const active = enriched.filter(c => !c.konkurs);
