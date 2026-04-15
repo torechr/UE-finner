@@ -26,6 +26,19 @@ const KEYWORDS = {
   pukkverk:       ["pukkverk", "steinbrudd", "grustak", "pukk", "grus", "knust", "singel", "tilslag", "steinknusing", "stein", "hellebrudd", "fjellbrudd", "knusing"],
 };
 
+// Keywords searched in purpose/formaal text (broader reach than name search)
+const PURPOSE_KEYWORDS = {
+  vinter:         ["broeyting", "vinterdrift", "salting"],
+  vinterlastebil: ["broeyting", "vinterdrift", "salting"],
+  vintertraktor:  ["broeyting", "vinterdrift", "snorydding"],
+  trafikk:        ["trafikkdirigering", "arbeidsvarsling"],
+  renhold:        ["feiing", "spyling", "veisop"],
+  naturlike:      ["kantklipp", "skoging", "skogrydding", "trefelling"],
+  parklike:       ["arborist", "trepleie", "plenklipp"],
+  graving:        ["graving", "maskinentreprenor", "hjulgraver"],
+  pukkverk:       ["pukkverk", "steinbrudd", "grustak", "knusing"],
+};
+
 // Municipality number mapping (all Norwegian municipalities 2024)
 const KOMMUNE_NR = {
   // Agder
