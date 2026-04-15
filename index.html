@@ -261,7 +261,7 @@
         </select>
       </div>
       <div style="flex:2 1 300px">
-        <label class="lbl">Tjenestekategori</label>
+        <label class="lbl">Tjenestekategori <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#9ca3af">(velg én eller flere)</span></label>
         <div style="display:flex;flex-direction:column;gap:6px">
           <div class="eq-row">
             <button class="eq-btn" onclick="setEq('vinterlastebil',this)">❄ Vinter · lastebil<span class="eq-sub">brøyting · salting</span></button>
@@ -315,7 +315,7 @@
 const STATUS_OPTIONS = ["","Kontaktet","Tilbud mottatt","Godkjent","Avvist"];
 const STATUS_CLASS = {"Kontaktet":"s-kontaktet","Tilbud mottatt":"s-tilbud","Godkjent":"s-godkjent","Avvist":"s-avvist"};
 
-let eq="",companiesData=[],farmersData=[],currentTab="companies",currentSource="",currentView="list";
+let eqs=new Set(),companiesData=[],farmersData=[],currentTab="companies",currentSource="",currentView="list";
 let favourites=JSON.parse(localStorage.getItem("subfinder_favs")||"[]");
 let projects=JSON.parse(localStorage.getItem("subfinder_projects")||"{}");
 let currentProject="";
@@ -380,9 +380,13 @@ loadProjects();
 document.getElementById("location").addEventListener("change",updateBtn);
 updateFavCount();
 
-function setEq(v,btn){eq=v;document.querySelectorAll(".eq-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");updateBtn();}
+function setEq(v,btn){
+  if(eqs.has(v)){eqs.delete(v);btn.classList.remove("active");}
+  else{eqs.add(v);btn.classList.add("active");}
+  updateBtn();
+}
 function updateBtn(){
-  const ok=!!document.getElementById("location").value&&!!eq;
+  const ok=!!document.getElementById("location").value&&eqs.size>0;
   document.getElementById("searchBtn").disabled=!ok;
   const isCounty=["Agder","Akershus","Buskerud","Finnmark","Innlandet","Møre og Romsdal","Nordland","Oslo","Rogaland","Telemark","Troms","Trøndelag","Vestfold","Vestland","Østfold"].includes(document.getElementById("location").value);
   document.getElementById("searchAllBtn").disabled=!ok||!isCounty;
@@ -394,15 +398,28 @@ function setPhase(msg){document.getElementById("phase").textContent=msg;}
 
 async function doSearch(complete=false){
   const location=document.getElementById("location").value;
-  if(!location||!eq)return;
+  if(!location||eqs.size===0)return;
   hide("results");hide("errorBox");show("loading");
   setPhase(complete?"Komplett fylkessøk – henter alle kommuner...":"Søker i Brønnøysundregistrene...");
   companiesData=[];farmersData=[];
   try{
-    const r1=await fetch("/api/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({location,equipment:eq,complete})});
-    const d1=await r1.json();
-    if(d1.error)throw new Error(d1.error);
-    companiesData=d1.companies||[];currentSource=d1.source||"";
+    // Search all selected categories in parallel
+    const results = await Promise.all([...eqs].map(equipment=>
+      fetch("/api/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({location,equipment,complete})})
+        .then(r=>r.json())
+    ));
+    // Merge and deduplicate by orgnr
+    const seen=new Set();
+    const merged=[];
+    for(const d of results){
+      if(d.error)continue;
+      for(const c of d.companies||[]){
+        if(!seen.has(c.orgnr)){seen.add(c.orgnr);merged.push(c);}
+      }
+    }
+    // Sort by score desc
+    companiesData=merged.sort((a,b)=>(b.score||0)-(a.score||0));
+    currentSource=results[0]?.source||"";
     hide("loading");renderResults(location);
   }catch(e){hide("loading");document.getElementById("errorBox").textContent="⚠ "+e.message;show("errorBox");}
 }
@@ -410,7 +427,8 @@ async function doSearch(complete=false){
 function setTab(t){currentTab=t;document.getElementById("tabCompanies").classList.toggle("active",t==="companies");document.getElementById("tabFarmers").classList.toggle("active",t==="farmers");renderCards();}
 
 function renderResults(location){
-  const eqLabel={vinter:"Vinter",vinterlastebil:"Vinter (lastebil)",vintertraktor:"Vinter (traktor)",trafikk:"Trafikkdirigering",renhold:"Renhold",naturlike:"Naturlike arealer",parklike:"Parklike arealer",graving:"Graving",pukkverk:"Pukkverk / steinbrudd"}[eq]||eq;
+  const eqLabels={vinter:"Vinter",vinterlastebil:"Vinter (lastebil)",vintertraktor:"Vinter (traktor)",trafikk:"Trafikkdirigering",renhold:"Renhold",naturlike:"Naturlike arealer",parklike:"Parklike arealer",graving:"Graving",pukkverk:"Pukkverk / steinbrudd"};
+  const eqLabel=[...eqs].map(e=>eqLabels[e]||e).join(" + ");
   hide("tabs");
   const bc=companiesData.filter(c=>c.score===0).length;
   let s=`<strong>${companiesData.length} selskaper</strong> · ${location} · ${eqLabel}`;
@@ -515,7 +533,7 @@ function exportCSV(){
   const h=["Navn","Org.nr","Kommune","Bransje","Ansatte","Stiftet","Org.form","Daglig leder","Telefon","Epost","Score","Anbefaling","Begrunnelse","Status","Risikoer","Skatteattest","Brreg","Soliditet"];
   const rows=data.map(r=>[r.navn,r.orgnr||"",r.kommune||"",r.nace||"",r.ansatte||"",r.stiftet||"",r.organisasjonsform||"",r.dagligLeder||"",r.telefon||"",r.epost||"",r.score,r.anbefaling,r.begrunnelse,getStatus(r.orgnr),(r.risikoer||[]).join(" / "),r.orgnr?"https://info.altinn.no/skjemaoversikt/skatteetaten/bestilling-av-opplysninger-om-skatt-og-avgift-rf-1507/":"",r.orgnr?`https://data.brreg.no/enhetsregisteret/oppslag/enheter/${r.orgnr}`:"",r.orgnr?`https://www.soliditet.no/online/login.jsp?orgnr=${r.orgnr}`:""]);
   const csv=[h,...rows].map(r=>r.map(v=>`"${String(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");
-  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));a.download=`subfinder_${loc}_${eq}${currentProject?"_"+currentProject:""}.csv`;a.click();
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));a.download=`subfinder_${loc}_${[...eqs].join("-")}${currentProject?"_"+currentProject:""}.csv`;a.click();
 }
 function exportFavCSV(){
   const h=["Navn","Org.nr","Kommune","Score","Anbefaling","Daglig leder","Telefon","Epost","Brreg"];
