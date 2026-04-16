@@ -224,6 +224,9 @@
             <button class="eq-btn" onclick="setEq('parklike',this)">✿ Parklike<span class="eq-sub">plenklipp · gartner</span></button>
             <button class="eq-btn" onclick="setEq('pukkverk',this)">⬡ Pukkverk<span class="eq-sub">grus · steinbrudd</span></button>
           </div>
+          <div class="eq-row">
+            <button class="eq-btn" id="selectAllBtn" onclick="selectAllEq()" style="flex:0 0 auto;padding:6px 14px;font-size:11px;color:#6b7280">☰ Velg alle</button>
+          </div>
         </div>
       </div>
       <button class="btn-primary" id="searchBtn" onclick="doSearch(false)" disabled>Søk →</button>
@@ -329,7 +332,7 @@ function setStatus(orgnr,status){
 const LOCATION_DATA = [
   {group:"Agder", items:["Hele Agder (fylke)|Agder","Arendal","Birkenes","Bygland","Bykle","Evje og Hornnes","Farsund","Flekkefjord","Froland","Gjerstad","Grimstad","Hægebostad","Iveland","Kristiansand","Kvinesdal","Lillesand","Lindesnes","Lyngdal","Risør","Tvedestrand","Valle","Vegårshei","Åmli","Åseral"]},
   {group:"Akershus", items:["Hele Akershus (fylke)|Akershus","Asker","Aurskog-Høland","Bærum","Enebakk","Frogn","Gjerdrum","Hurdal","Lørenskog","Nannestad","Nesodden","Nittedal","Rælingen","Ullensaker","Vestby","Ås"]},
-  {group:"Buskerud", items:["Hele Buskerud (fylke)|Buskerud","Drammen","Flå","Flesberg","Gol","Hemsedal","Hol","Hole","Kongsberg","Krødsherad","Lier","Modum","Nedre Eiker","Nore og Uvdal","Ringerike","Rollag","Sigdal","Øvre Eiker","Ål"]},
+  {group:"Buskerud", items:["Hele Buskerud (fylke)|Buskerud","Drammen","Flå","Flesberg","Gol","Hemsedal","Hol","Hole","Kongsberg","Krødsherad","Lier","Modum","Nesbyen","Nore og Uvdal","Ringerike","Rollag","Sigdal","Øvre Eiker","Ål"]},
   {group:"Finnmark", items:["Hele Finnmark (fylke)|Finnmark","Alta","Berlevåg","Båtsfjord","Gamvik","Hammerfest","Hasvik","Karasjok","Kautokeino","Lebesby","Loppa","Måsøy","Nesseby","Nordkapp","Porsanger","Sør-Varanger","Tana","Vadsø","Vardø"]},
   {group:"Innlandet", items:["Hele Innlandet (fylke)|Innlandet","Alvdal","Dovre","Engerdal","Etnedal","Folldal","Gausdal","Gran","Gjøvik","Hamar","Jevnaker","Kongsvinger","Lesja","Lillehammer","Lom","Lunner","Løten","Nord-Aurdal","Nord-Fron","Nord-Odal","Nordre Land","Rendalen","Ringebu","Ringsaker","Sel","Skjåk","Sør-Aurdal","Sør-Fron","Sør-Odal","Søndre Land","Tolga","Trysil","Tynset","Vestre Slidre","Vestre Toten","Vågå","Øyer","Øystre Slidre","Østre Toten","Åsnes"]},
   {group:"Møre og Romsdal", items:["Hele Møre og Romsdal (fylke)|Møre og Romsdal","Aukra","Aure","Averøy","Fjord","Fræna","Giske","Gjemnes","Haram","Hareid","Herøy","Kristiansund","Molde","Rauma","Rindal","Smøla","Stranda","Surnadal","Sykkylven","Tingvoll","Ulstein","Vanylven","Vestnes","Volda","Ørsta","Ålesund"]},
@@ -339,7 +342,7 @@ const LOCATION_DATA = [
   {group:"Telemark", items:["Hele Telemark (fylke)|Telemark","Bamble","Bø","Drangedal","Fyresdal","Hjartdal","Kviteseid","Midt-Telemark","Nissedal","Nome","Notodden","Porsgrunn","Seljord","Siljan","Skien","Tinn","Tokke","Vinje"]},
   {group:"Troms", items:["Hele Troms (fylke)|Troms","Balsfjord","Bardu","Dyrøy","Harstad","Ibestad","Karlsøy","Kvæfjord","Kvænangen","Kåfjord","Lavangen","Lenvik","Lyngen","Målselv","Nordreisa","Salangen","Skjervøy","Skånland","Storfjord","Sørreisa","Tjeldsund","Tranøy","Tromsø"]},
   {group:"Trøndelag", items:["Hele Trøndelag (fylke)|Trøndelag","Flatanger","Frosta","Frøya","Grong","Heim","Hitra","Holtålen","Høylandet","Inderøy","Indre Fosen","Leka","Levanger","Lierne","Malvik","Melhus","Meråker","Midtre Gauldal","Namsos","Namsskogan","Nærøysund","Oppdal","Orkland","Overhalla","Rennebu","Røros","Røyrvik","Selbu","Skaun","Snåsa","Steinkjer","Stjørdal","Trondheim","Tydal","Verdal","Ørland","Åfjord"]},
-  {group:"Vestfold", items:["Hele Vestfold (fylke)|Vestfold","Holmestrand","Horten","Larvik","Sandefjord","Svelvik","Tønsberg"]},
+  {group:"Vestfold", items:["Hele Vestfold (fylke)|Vestfold","Holmestrand","Horten","Larvik","Sandefjord","Tønsberg"]},
   {group:"Vestland", items:["Hele Vestland (fylke)|Vestland","Alver","Askøy","Askvoll","Aurland","Austevoll","Austrheim","Bergen","Bjørnafjorden","Bremanger","Bømlo","Eidfjord","Etne","Fedje","Fitjar","Fjaler","Gloppen","Gulen","Høyanger","Hyllestad","Kinn","Kvam","Kvinnherad","Lærdal","Luster","Masfjorden","Modalen","Osterøy","Samnanger","Sogndal","Solund","Stad","Stord","Stryn","Sunnfjord","Sveio","Tysnes","Ullensvang","Ulvik","Vik","Voss","Øygarden","Årdal"]},
   {group:"Østfold", items:["Hele Østfold (fylke)|Østfold","Aremark","Eidsberg","Fredrikstad","Halden","Hobøl","Hvaler","Marker","Moss","Rakkestad","Råde","Rømskog","Sarpsborg","Skiptvet","Spydeberg","Trøgstad","Våler"]},
 ];
@@ -417,7 +420,26 @@ updateFavCount();
 function setEq(v,btn){
   if(eqs.has(v)){eqs.delete(v);btn.classList.remove("active");}
   else{eqs.add(v);btn.classList.add("active");}
+  updateSelectAllBtn();
   updateBtn();
+}
+const ALL_EQS = ['vinterlastebil','vintertraktor','graving','trafikk','renhold','naturlike','parklike','pukkverk'];
+function selectAllEq(){
+  const allSelected = ALL_EQS.every(e => eqs.has(e));
+  document.querySelectorAll('.eq-btn[onclick^="setEq"]').forEach(btn=>{
+    const v=btn.getAttribute('onclick').match(/setEq\('(\w+)'/)[1];
+    if(allSelected){eqs.delete(v);btn.classList.remove("active");}
+    else{eqs.add(v);btn.classList.add("active");}
+  });
+  updateSelectAllBtn();
+  updateBtn();
+}
+function updateSelectAllBtn(){
+  const btn=document.getElementById("selectAllBtn");
+  if(!btn)return;
+  const allSelected=ALL_EQS.every(e=>eqs.has(e));
+  btn.textContent=allSelected?"☰ Fjern alle":"☰ Velg alle";
+  btn.classList.toggle("active",allSelected);
 }
 function updateBtn(){
   const ok=!!document.getElementById("location").value&&eqs.size>0;
@@ -553,8 +575,10 @@ function setView(v){
 function exportCSV(){
   const data=currentTab==="farmers"?farmersData:companiesData;
   const loc=document.getElementById("location").value;
-  const h=["Navn","Org.nr","Kommune","Bransje","Ansatte","Stiftet","Org.form","Daglig leder","Telefon","Epost","Score","Anbefaling","Begrunnelse","Status","Risikoer","Skatteattest","Brreg","Soliditet"];
-  const rows=data.map(r=>[r.navn,r.orgnr||"",r.kommune||"",r.nace||"",r.ansatte||"",r.stiftet||"",r.organisasjonsform||"",r.dagligLeder||"",r.telefon||"",r.epost||"",r.score,r.anbefaling,r.begrunnelse,getStatus(r.orgnr),(r.risikoer||[]).join(" / "),r.orgnr?"https://info.altinn.no/skjemaoversikt/skatteetaten/bestilling-av-opplysninger-om-skatt-og-avgift-rf-1507/":"",r.orgnr?`https://data.brreg.no/enhetsregisteret/oppslag/enheter/${r.orgnr}`:"",r.orgnr?`https://www.soliditet.no/online/login.jsp?orgnr=${r.orgnr}`:""]);
+  const eqLabels={vinterlastebil:"Vinter (lastebil)",vintertraktor:"Vinter (traktor)",trafikk:"Trafikkdirigering",renhold:"Renhold",naturlike:"Naturlike arealer",parklike:"Parklike arealer",graving:"Graving",pukkverk:"Pukkverk / steinbrudd"};
+  const kategori=[...eqs].map(e=>eqLabels[e]||e).join(" + ");
+  const h=["Navn","Org.nr","Kommune","Kategori","Bransje","Ansatte","Stiftet","Org.form","Daglig leder","Telefon","Epost","Score","Anbefaling","Begrunnelse","Status","Risikoer","Skatteattest","Brreg","Soliditet"];
+  const rows=data.map(r=>[r.navn,r.orgnr||"",r.kommune||"",kategori,r.nace||"",r.ansatte||"",r.stiftet||"",r.organisasjonsform||"",r.dagligLeder||"",r.telefon||"",r.epost||"",r.score,r.anbefaling,r.begrunnelse,getStatus(r.orgnr),(r.risikoer||[]).join(" / "),r.orgnr?"https://info.altinn.no/skjemaoversikt/skatteetaten/bestilling-av-opplysninger-om-skatt-og-avgift-rf-1507/":"",r.orgnr?`https://data.brreg.no/enhetsregisteret/oppslag/enheter/${r.orgnr}`:"",r.orgnr?`https://www.soliditet.no/online/login.jsp?orgnr=${r.orgnr}`:""]);
   const csv=[h,...rows].map(r=>r.map(v=>`"${String(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));a.download=`subfinder_${loc}_${[...eqs].join("-")}${currentProject?"_"+currentProject:""}.csv`;a.click();
 }
