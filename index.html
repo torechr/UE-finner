@@ -517,11 +517,15 @@ function renderCards(){
     const fs=r.orgnr&&isFav(r.orgnr);
     const status=getStatus(r.orgnr);
     const statusCls=STATUS_CLASS[status]||"";
+    const mefUrl=`https://www.mef.no/bransjeregister/?search=${encodeURIComponent(r.navn)}`;
+    const nlfUrl=`https://lastebil.no/medlem/alle-medlemmer/?search=${encodeURIComponent(r.navn)}`;
     const links=!bankrupt&&r.orgnr
       ?`<a class="tag" href="https://info.altinn.no/skjemaoversikt/skatteetaten/bestilling-av-opplysninger-om-skatt-og-avgift-rf-1507/" target="_blank">Skatteattest</a>
          <a class="tag" href="https://data.brreg.no/enhetsregisteret/oppslag/enheter/${r.orgnr}" target="_blank">Brreg</a>
          <a class="tag" href="https://www.soliditet.no/online/login.jsp?orgnr=${r.orgnr}" target="_blank">Soliditet</a>
-         <a class="tag" href="https://www.startbank.no" target="_blank">StartBANK</a>`
+         <a class="tag" href="https://www.startbank.no" target="_blank">StartBANK</a>
+         <a class="tag" href="${mefUrl}" target="_blank" title="Sjekk MEF-medlemskap">MEF</a>
+         <a class="tag" href="${nlfUrl}" target="_blank" title="Sjekk NLF-medlemskap">NLF</a>`
       :!bankrupt?`<a class="tag-o" href="https://brreg.no/finn-foretak/?name=${encodeURIComponent(r.navn)}" target="_blank">Søk i Brreg</a>`:"";
     const risks=(r.risikoer||[]).map(x=>`<span class="risk">⚠ ${x}</span>`).join("");
     const noAnsatte=(!r.ansatte||r.ansatte===0)?`<span class="risk">Ingen registrerte ansatte</span>`:"";
@@ -577,8 +581,8 @@ function exportCSV(){
   const loc=document.getElementById("location").value;
   const eqLabels={vinterlastebil:"Vinter (lastebil)",vintertraktor:"Vinter (traktor)",trafikk:"Trafikkdirigering",renhold:"Renhold",naturlike:"Naturlike arealer",parklike:"Parklike arealer",graving:"Graving",pukkverk:"Pukkverk / steinbrudd"};
   const kategori=[...eqs].map(e=>eqLabels[e]||e).join(" + ");
-  const h=["Navn","Org.nr","Kommune","Kategori","Bransje","Ansatte","Stiftet","Org.form","Daglig leder","Telefon","Epost","Score","Anbefaling","Begrunnelse","Status","Risikoer","Skatteattest","Brreg","Soliditet"];
-  const rows=data.map(r=>[r.navn,r.orgnr||"",r.kommune||"",kategori,r.nace||"",r.ansatte||"",r.stiftet||"",r.organisasjonsform||"",r.dagligLeder||"",r.telefon||"",r.epost||"",r.score,r.anbefaling,r.begrunnelse,getStatus(r.orgnr),(r.risikoer||[]).join(" / "),r.orgnr?"https://info.altinn.no/skjemaoversikt/skatteetaten/bestilling-av-opplysninger-om-skatt-og-avgift-rf-1507/":"",r.orgnr?`https://data.brreg.no/enhetsregisteret/oppslag/enheter/${r.orgnr}`:"",r.orgnr?`https://www.soliditet.no/online/login.jsp?orgnr=${r.orgnr}`:""]);
+  const h=["Navn","Org.nr","Kommune","Kategori","Bransje","Ansatte","Stiftet","Org.form","Daglig leder","Telefon","Epost","Score","Anbefaling","Begrunnelse","Status","Risikoer","Skatteattest","Brreg","Soliditet","MEF","NLF"];
+  const rows=data.map(r=>[r.navn,r.orgnr||"",r.kommune||"",kategori,r.nace||"",r.ansatte||"",r.stiftet||"",r.organisasjonsform||"",r.dagligLeder||"",r.telefon||"",r.epost||"",r.score,r.anbefaling,r.begrunnelse,getStatus(r.orgnr),(r.risikoer||[]).join(" / "),r.orgnr?"https://info.altinn.no/skjemaoversikt/skatteetaten/bestilling-av-opplysninger-om-skatt-og-avgift-rf-1507/":"",r.orgnr?`https://data.brreg.no/enhetsregisteret/oppslag/enheter/${r.orgnr}`:"",r.orgnr?`https://www.soliditet.no/online/login.jsp?orgnr=${r.orgnr}`:"",r.navn?`https://www.mef.no/bransjeregister/?search=${encodeURIComponent(r.navn)}`:"",r.navn?`https://lastebil.no/medlem/alle-medlemmer/?search=${encodeURIComponent(r.navn)}`:""]);
   const csv=[h,...rows].map(r=>r.map(v=>`"${String(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));a.download=`subfinder_${loc}_${[...eqs].join("-")}${currentProject?"_"+currentProject:""}.csv`;a.click();
 }
