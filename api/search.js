@@ -29,13 +29,13 @@ const KEYWORDS = {
 // Keywords searched in purpose/formaal text (broader reach than name search)
 const PURPOSE_KEYWORDS = {
   vinter:         ["broeyting", "vinterdrift", "salting"],
-  vinterlastebil: ["broeyting", "vinterdrift", "salting"],
+  vinterlastebil: ["broeyting", "vinterdrift", "salting", "nlf", "vinterdrift"],
   vintertraktor:  ["broeyting", "vinterdrift", "snorydding"],
   trafikk:        ["trafikkdirigering", "arbeidsvarsling"],
   renhold:        ["feiing", "spyling", "veisop"],
   naturlike:      ["kantklipp", "skoging", "skogrydding", "trefelling"],
   parklike:       ["arborist", "trepleie", "plenklipp"],
-  graving:        ["graving", "maskinentreprenor", "hjulgraver"],
+  graving:        ["graving", "maskinentreprenor", "hjulgraver", "mef"],
   pukkverk:       ["pukkverk", "steinbrudd", "grustak", "knusing"],
 };
 
@@ -78,12 +78,12 @@ const KOMMUNE_NR = {
   "tynset":["3469"],"vestre slidre":["3471"],"vestre toten":["3473"],"vågå":["3475"],
   "øyer":["3477"],"øystre slidre":["3479"],"østre toten":["3481"],"åsnes":["3483"],
   // More og Romsdal
-  "aukra":["1547"],"aure":["1511"],"averøy":["1514"],"fjord":["1515"],
-  "fræna":["1516"],"giske":["1517"],"gjemnes":["1519"],"haram":["1520"],
-  "hareid":["1523"],"herøy":["1524"],"kristiansund":["1505"],"molde":["1506"],
-  "rauma":["1526"],"rindal":["1528"],"smøla":["1531"],"stranda":["1532"],
-  "surnadal":["1535"],"sykkylven":["1539"],"tingvoll":["1543"],"ulstein":["1545"],
-  "vanylven":["1546"],"vestnes":["1547"],"volda":["1548"],"ørsta":["1551"],
+  "aukra":["1547"],"aure":["1576"],"averøy":["1554"],"fjord":["1578"],
+  "giske":["1532"],"gjemnes":["1557"],"haram":["1580"],
+  "hareid":["1517"],"herøy":["1515"],"kristiansund":["1505"],"molde":["1506"],
+  "rauma":["1539"],"rindal":["5061"],"smøla":["1573"],"stranda":["1525"],
+  "sunndal":["1563"],"surnadal":["1566"],"sykkylven":["1528"],"tingvoll":["1560"],"ulstein":["1516"],
+  "vanylven":["1511"],"vestnes":["1535"],"volda":["1577"],"ørsta":["1520"],
   "ålesund":["1508"],
   // Nordland
   "alstahaug":["1811"],"andøy":["1812"],"bindal":["1813"],"bodø":["1804"],
@@ -153,7 +153,7 @@ const KOMMUNE_NR = {
   "buskerud":["3301","3303","3305","3307","3309","3311","3313","3315","3317","3319","3321","3323","3325","3327","3329","3331","3333","3301"],
   "finnmark":["5601","5603","5605","5607","5610","5612","5614","5616","5618","5620","5622","5624","5626","5628","5630","5632","5634","5636"],
   "innlandet":["3401","3403","3405","3407","3409","3411","3413","3415","3417","3419","3421","3423","3425","3427","3429","3431","3433","3435","3437","3439","3441","3443","3445","3447","3449","3451","3453","3455","3457","3459","3461","3463","3465","3467","3469","3471","3473","3475","3477","3479","3481","3483"],
-  "møre og romsdal":["1505","1506","1507","1508","1511","1514","1515","1516","1517","1519","1520","1523","1524","1526","1528","1531","1532","1535","1539","1543","1545","1546","1547","1548","1551"],
+  "møre og romsdal":["1505","1506","1508","1511","1514","1515","1516","1517","1520","1525","1528","1531","1532","1535","1539","1547","1554","1557","1560","1563","1566","1573","1576","1577","1578","1580"],
   "nordland":["1804","1806","1811","1812","1813","1815","1816","1818","1820","1822","1824","1825","1826","1827","1828","1832","1833","1834","1835","1836","1837","1838","1839","1840","1841","1845","1848","1851","1853","1856","1857","1859","1860","1865","1866","1867","1868"],
   "oslo":["0301"],
   "rogaland":["1101","1103","1108","1111","1112","1114","1119","1120","1121","1122","1124","1127","1130","1133","1144","1145","1146","1149","1151","1160"],
