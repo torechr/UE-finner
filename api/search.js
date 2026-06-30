@@ -198,26 +198,42 @@ async function getKommuneNr(location) {
 }
 
 async function brregFetch(url) {
-  const res = await fetch(url, {
-    headers: { Accept: "application/json" },
-    signal: AbortSignal.timeout(12000),
-  });
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!res.ok) {
+      // Logg faktisk status + feilmelding fra Brreg i stedet for a svelge feilen stille.
+      // Brreg returnerer detaljert valideringsfeil-JSON pa 400-responser.
+      let detail = "";
+      try { detail = await res.text(); } catch {}
+      console.error(`Brreg ${res.status} for url=${url} :: ${detail.slice(0, 500)}`);
+      return null;
+    }
+    return res.json();
+  } catch (e) {
+    console.error(`Brreg fetch-feil for url=${url} :: ${e.message}`);
+    return null;
+  }
 }
 
 async function brregSearchByKommune(kommuneNr, naceCodes, keywords, purposeKeywords) {
-  const nacePromises = naceCodes.map(nace =>
-    brregFetch(`https://data.brreg.no/enhetsregisteret/api/enheter?naeringskode=${nace}&kommunenummer=${kommuneNr}&size=50&konkurs=false&underAvvikling=false&organisasjonsform=AS,ENK,ANS,DA,SA,NUF,BA,STI,FLI`)
-      .then(data => data?._embedded?.enheter || [])
-      .catch(() => [])
-  );
+  // Ett samlet kall med kommaseparert naeringskode-liste, slik Brreg sitt API faktisk forventer
+  // (eksempel fra dokumentasjonen: naeringskode=41.109,01.1). Tidligere ble det sendt ett
+  // kall PER kode, noe som i kombinasjon med den lange organisasjonsform-listen kunne gi 400.
+  const nacePromise = naceCodes.length > 0
+    ? brregFetch(`https://data.brreg.no/enhetsregisteret/api/enheter?naeringskode=${naceCodes.join(",")}&kommunenummer=${kommuneNr}&size=50&konkurs=false&underAvvikling=false&organisasjonsform=AS,ENK,ANS,DA,SA,NUF,BA,STI,FLI`)
+        .then(data => data?._embedded?.enheter || [])
+        .catch(() => [])
+    : Promise.resolve([]);
+
   const keywordPromises = (keywords || []).map(kw =>
     brregFetch(`https://data.brreg.no/enhetsregisteret/api/enheter?navn=${encodeURIComponent(kw)}&kommunenummer=${kommuneNr}&size=20&konkurs=false&underAvvikling=false&organisasjonsform=AS,ENK,ANS,DA,SA,NUF,BA,STI,FLI`)
       .then(data => data?._embedded?.enheter || [])
       .catch(() => [])
   );
-  const results = await Promise.all([...nacePromises, ...keywordPromises]);
+  const results = await Promise.all([nacePromise, ...keywordPromises]);
   return results.flat();
 }
 
