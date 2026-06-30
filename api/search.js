@@ -2,15 +2,18 @@ const Anthropic = require("@anthropic-ai/sdk");
 
 const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// NB: Brreg sitt API krever eksakt match pa naeringskode (ikke prefiks-sok).
+// Derfor ma alle 5-sifrede SN2007-koder under en gruppe listes eksplisitt.
+// Gruppe 43.12 Grunnarbeid bestar av: 43.110, 43.120, 43.130, 43.190
 const NACE = {
-  vinter:         ["81.29", "49.41", "43.12", "01.61"],
-  vinterlastebil: ["81.29", "49.41", "49.42", "52.29", "43.12"],
-  vintertraktor:  ["81.29", "01.61", "01.62", "01.41", "01.45", "81.30", "43.12"],
+  vinter:         ["81.29", "49.41", "43.110", "43.120", "43.130", "43.190", "01.61"],
+  vinterlastebil: ["81.29", "49.41", "49.42", "52.29", "43.110", "43.120", "43.130", "43.190"],
+  vintertraktor:  ["81.29", "01.61", "01.62", "01.41", "01.45", "81.30", "43.110", "43.120", "43.130", "43.190"],
   trafikk:        ["80.10", "52.21", "74.90", "43.99"],
   renhold:        ["81.29", "81.21", "37.00", "38.11"],
-  naturlike:      ["81.30", "02.10", "02.40", "01.61", "43.12"],
+  naturlike:      ["81.30", "02.10", "02.40", "01.61", "43.110", "43.120", "43.130", "43.190"],
   parklike:       ["81.30", "01.19", "01.13", "02.10", "02.40"],
-  graving:        ["43.12", "43.13", "42.11", "42.21", "41.20", "43.99"],
+  graving:        ["43.110", "43.120", "43.130", "43.190", "43.13", "42.11", "42.21", "41.20", "43.99"],
   pukkverk:       ["08.11", "08.12", "08.91", "23.70"],
 };
 
@@ -116,7 +119,7 @@ const KOMMUNE_NR = {
   "kåfjord":["5540"],"lavangen":["5518"],"senja":["5530"],"lyngen":["5536"],
   "målselv":["5524"],"nordreisa":["5544"],"salangen":["5522"],"skjervøy":["5542"],
   "tjeldsund":["5512"],"storfjord":["5538"],"sørreisa":["5526"],"gratangen":["5516"],
-  "senja":["5530"],"tromsø":["5501"],
+  "tromsø":["5501"],
   // Trondelag
   "flatanger":["5036"],"frosta":["5037"],"frøya":["5038"],"grong":["5041"],
   "heim":["5042"],"hitra":["5043"],"holtålen":["5044"],"høylandet":["5045"],
