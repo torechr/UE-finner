@@ -363,7 +363,15 @@ async function loadKommuner() {
       const fylke = fylkeMap[prefix];
       if (!fylke) continue;
       if (!grupper[fylke]) grupper[fylke] = [];
-      grupper[fylke].push({label: navn, value: navn.toLowerCase(), knr});
+      // Rydd opp tospråklige navn (f.eks. "GAIVUONA SUOHKAN KÅFJORD KOMMUNE KAIVUONON KOMUUNI" -> "Kåfjord")
+      // Behold siste token som ikke er et administrativt ord
+      const skipOrd = ["kommune","komuuni","suohkan","suohkana","gielda","gieldda","kommuuni","kommuune","kaivuonon","gaivuona","guovdageainnu","suohkan"];
+      const tokens = navn.split(/[\s\/]+/);
+      const norsk = tokens.filter(t => !skipOrd.includes(t.toLowerCase()) && t.length > 1);
+      const visNavn = norsk.length > 0
+        ? norsk[norsk.length - 1].charAt(0).toUpperCase() + norsk[norsk.length - 1].slice(1).toLowerCase()
+        : navn;
+      grupper[fylke].push({label: visNavn, value: visNavn.toLowerCase(), knr});
     }
 
     // Bygg LOCATION_DATA med fylke-oppføring øverst, deretter kommuner alfabetisk
