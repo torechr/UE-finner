@@ -61,6 +61,9 @@
     .score-num-dot { font-size: 11px; opacity: 0.7; }
     .tag { font-size: 12px; text-decoration: none; background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; border-radius: 5px; padding: 3px 9px; white-space: nowrap; }
     .tag:hover { background: #dbeafe; }
+    /* Proff-tag: litt annerledes farge for å skille den ut */
+    .tag-proff { font-size: 12px; text-decoration: none; background: #f0fdf4; border: 1px solid #86efac; color: #15803d; border-radius: 5px; padding: 3px 9px; white-space: nowrap; }
+    .tag-proff:hover { background: #dcfce7; }
     .tag-o { font-size: 12px; text-decoration: none; background: #fff7ed; border: 1px solid #fed7aa; color: #c2410c; border-radius: 5px; padding: 3px 9px; }
     .tags-row { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; margin-top: 6px; }
     .risk { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 5px; padding: 2px 8px; font-size: 12px; }
@@ -91,14 +94,12 @@
     .hidden { display: none; }
     .bankrupt-overlay { opacity: 0.55; }
 
-    /* Status selector */
     .status-sel { font-size: 12px; border: 1px solid #e2e5ea; border-radius: 6px; padding: 3px 8px; background: #fff; color: #374151; font-family: inherit; cursor: pointer; }
     .status-sel.s-kontaktet { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
     .status-sel.s-tilbud { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
     .status-sel.s-godkjent { background: #dcfce7; border-color: #86efac; color: #15803d; }
     .status-sel.s-avvist { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
 
-    /* Project selector */
     .project-bar { background: #fff; border: 1px solid #e2e5ea; border-radius: 8px; padding: 10px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .project-label { font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
     .project-sel { border: 1px solid #d1d5db; border-radius: 7px; padding: 6px 12px; font-size: 13px; font-family: inherit; background: #fff; color: #1a1a2e; outline: none; flex: 1; min-width: 200px; }
@@ -110,48 +111,31 @@
     .loc-county { font-weight: 500; color: #e85c0d; }
     #locationInput:focus { border-color: #e85c0d; box-shadow: 0 0 0 3px rgba(232,92,13,0.1); }
 
-    /* ── Mobile responsive ───────────────────────── */
     @media (max-width: 640px) {
       .header { padding: 12px 16px; }
       .header-sub { display: none; }
       .wrap { padding: 12px 10px; }
       .card { padding: 14px 14px; }
-
-      /* Search form stacks vertically */
       .row { flex-direction: column; gap: 10px; }
       .row > * { flex: none !important; width: 100%; }
       .btn-primary, #searchAllBtn { width: 100%; padding: 13px; font-size: 15px; }
-
-      /* Category buttons: 2 per row on phone */
       .eq-row { flex-wrap: wrap; gap: 6px; }
       .eq-btn { flex: 1 1 calc(50% - 3px); min-width: calc(50% - 3px); padding: 10px 4px; font-size: 12px; }
       .eq-sub { font-size: 10px; }
-
-      /* Project bar */
       .project-bar { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 12px; }
       .project-sel, .project-new-input { min-width: 0; width: 100%; }
-
-      /* Result cards: stack score under name */
       .result { padding: 12px 14px; }
       .result > div:first-child { flex-direction: column !important; gap: 10px !important; }
       .result > div:first-child > div:last-child { align-items: flex-start !important; flex-direction: row !important; flex-wrap: wrap; gap: 8px; }
       .tags-row { justify-content: flex-start; }
       .result-name { font-size: 14px; }
-
-      /* Summary bar */
       .summary-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
       .flex-row { flex-wrap: wrap; }
-
-      /* Bigger touch targets */
       .tag { padding: 5px 10px; font-size: 12px; }
       .fav-btn { font-size: 20px; padding: 4px 6px; opacity: 0.5; }
       .status-sel { font-size: 13px; padding: 5px 10px; }
-      select { font-size: 16px; } /* prevents iOS zoom */
-
-      /* Map smaller on phone */
+      select { font-size: 16px; }
       #map { height: 300px; }
-
-      /* Shortlist header button */
       .header .btn-sec { padding: 6px 10px; font-size: 12px; }
     }
 
@@ -369,7 +353,6 @@ function filterLocations(){
 function showDropdown(){
   const q = document.getElementById("locationInput").value.trim().toLowerCase();
   if(q) { filterLocations(); return; }
-  // Show all grouped
   const all = LOCATION_DATA.map(g => g.items.map(item => ({group:g.group, item}))).flat();
   renderDropdown(all, "");
 }
@@ -520,9 +503,11 @@ function renderCards(){
     const mefUrl=`https://www.mef.no/bransjeregister/?search=${encodeURIComponent(r.navn)}`;
     const nlfUrl=`https://lastebil.no/medlem/alle-medlemmer/?search=${encodeURIComponent(r.navn)}`;
     const doffinUrl=`https://doffin.no/notices?SearchQuery=${encodeURIComponent(r.navn)}`;
+    const proffUrl=r.proff||`https://www.proff.no/selskap/-/-/-/${r.orgnr}/`;
     const links=!bankrupt&&r.orgnr
       ?`<a class="tag" href="https://info.altinn.no/skjemaoversikt/skatteetaten/bestilling-av-opplysninger-om-skatt-og-avgift-rf-1507/" target="_blank">Skatteattest</a>
          <a class="tag" href="https://data.brreg.no/enhetsregisteret/oppslag/enheter/${r.orgnr}" target="_blank">Brreg</a>
+         <a class="tag-proff" href="${proffUrl}" target="_blank" title="Omsetning, regnskap og kredittscore">Proff</a>
          <a class="tag" href="https://www.soliditet.no/online/login.jsp?orgnr=${r.orgnr}" target="_blank">Soliditet</a>
          <a class="tag" href="https://www.startbank.no" target="_blank">StartBANK</a>
          <a class="tag" href="${mefUrl}" target="_blank" title="Sjekk MEF-medlemskap">MEF</a>
@@ -583,14 +568,28 @@ function exportCSV(){
   const loc=document.getElementById("location").value;
   const eqLabels={vinterlastebil:"Vinter (lastebil)",vintertraktor:"Vinter (traktor)",trafikk:"Trafikkdirigering",renhold:"Renhold",naturlike:"Naturlike arealer",parklike:"Parklike arealer",graving:"Graving",pukkverk:"Pukkverk / steinbrudd"};
   const kategori=[...eqs].map(e=>eqLabels[e]||e).join(" + ");
-  const h=["Navn","Org.nr","Kommune","Kategori","Bransje","Ansatte","Stiftet","Org.form","Daglig leder","Telefon","Epost","Score","Anbefaling","Begrunnelse","Status","Risikoer","Skatteattest","Brreg","Soliditet","MEF","NLF","Doffin"];
-  const rows=data.map(r=>[r.navn,r.orgnr||"",r.kommune||"",kategori,r.nace||"",r.ansatte||"",r.stiftet||"",r.organisasjonsform||"",r.dagligLeder||"",r.telefon||"",r.epost||"",r.score,r.anbefaling,r.begrunnelse,getStatus(r.orgnr),(r.risikoer||[]).join(" / "),r.orgnr?"https://info.altinn.no/skjemaoversikt/skatteetaten/bestilling-av-opplysninger-om-skatt-og-avgift-rf-1507/":"",r.orgnr?`https://data.brreg.no/enhetsregisteret/oppslag/enheter/${r.orgnr}`:"",r.orgnr?`https://www.soliditet.no/online/login.jsp?orgnr=${r.orgnr}`:"",r.navn?`https://www.mef.no/bransjeregister/?search=${encodeURIComponent(r.navn)}`:"",r.navn?`https://lastebil.no/medlem/alle-medlemmer/?search=${encodeURIComponent(r.navn)}`:"",r.navn?`https://doffin.no/notices?SearchQuery=${encodeURIComponent(r.navn)}`:""]);
+  const h=["Navn","Org.nr","Kommune","Kategori","Bransje","Ansatte","Stiftet","Org.form","Daglig leder","Telefon","Epost","Score","Anbefaling","Begrunnelse","Status","Risikoer","Skatteattest","Brreg","Proff","Soliditet","MEF","NLF","Doffin"];
+  const rows=data.map(r=>[
+    r.navn,r.orgnr||"",r.kommune||"",kategori,r.nace||"",r.ansatte||"",r.stiftet||"",
+    r.organisasjonsform||"",r.dagligLeder||"",r.telefon||"",r.epost||"",
+    r.score,r.anbefaling,r.begrunnelse,getStatus(r.orgnr),(r.risikoer||[]).join(" / "),
+    r.orgnr?"https://info.altinn.no/skjemaoversikt/skatteetaten/bestilling-av-opplysninger-om-skatt-og-avgift-rf-1507/":"",
+    r.orgnr?`https://data.brreg.no/enhetsregisteret/oppslag/enheter/${r.orgnr}`:"",
+    r.orgnr?`https://www.proff.no/selskap/-/-/-/${r.orgnr}/`:"",
+    r.orgnr?`https://www.soliditet.no/online/login.jsp?orgnr=${r.orgnr}`:"",
+    r.navn?`https://www.mef.no/bransjeregister/?search=${encodeURIComponent(r.navn)}`:"",
+    r.navn?`https://lastebil.no/medlem/alle-medlemmer/?search=${encodeURIComponent(r.navn)}`:"",
+    r.navn?`https://doffin.no/notices?SearchQuery=${encodeURIComponent(r.navn)}`:""
+  ]);
   const csv=[h,...rows].map(r=>r.map(v=>`"${String(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));a.download=`subfinder_${loc}_${[...eqs].join("-")}${currentProject?"_"+currentProject:""}.csv`;a.click();
 }
 function exportFavCSV(){
-  const h=["Navn","Org.nr","Kommune","Score","Anbefaling","Daglig leder","Telefon","Epost","Brreg"];
-  const rows=favourites.map(r=>[r.navn,r.orgnr||"",r.kommune||"",r.score,r.anbefaling,r.dagligLeder||"",r.telefon||"",r.epost||"",r.orgnr?`https://data.brreg.no/enhetsregisteret/oppslag/enheter/${r.orgnr}`:""]);
+  const h=["Navn","Org.nr","Kommune","Score","Anbefaling","Daglig leder","Telefon","Epost","Brreg","Proff"];
+  const rows=favourites.map(r=>[r.navn,r.orgnr||"",r.kommune||"",r.score,r.anbefaling,r.dagligLeder||"",r.telefon||"",r.epost||"",
+    r.orgnr?`https://data.brreg.no/enhetsregisteret/oppslag/enheter/${r.orgnr}`:"",
+    r.orgnr?`https://www.proff.no/selskap/-/-/-/${r.orgnr}/`:"",
+  ]);
   const csv=[h,...rows].map(r=>r.map(v=>`"${String(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));a.download="subfinder_shortlist.csv";a.click();
 }
