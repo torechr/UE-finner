@@ -534,8 +534,7 @@ function hide(id){document.getElementById(id).classList.add("hidden");}
 function setPhase(msg){document.getElementById("phase").textContent=msg;}
 
 async function doSearch(complete=false){
-  const location=document.getElementById("location").value;
-  if(!location||eqs.size===0)return;
+  if(selectedLocations.length===0||eqs.size===0)return;
   hide("results");hide("errorBox");show("loading");
   setPhase(complete?"Komplett fylkessøk – henter alle kommuner...":"Søker i Brønnøysundregistrene...");
   companiesData=[];farmersData=[];
