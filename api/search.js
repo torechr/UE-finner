@@ -278,10 +278,19 @@ module.exports = async (req, res) => {
     const allKeywords = [...new Set(eqList.flatMap(eq => KEYWORDS[eq] || []))];
     const allPurpose = [...new Set(eqList.flatMap(eq => PURPOSE_KEYWORDS[eq] || []))];
 
-    // Hent kommunenummer for alle valgte steder og slaa sammen (deduplicert)
-    const allKommuneNrs = [...new Set(
-      (await Promise.all(locationList.map(loc => getKommuneNr(loc)))).flat()
-    )];
+    // Bruk kommunenummere fra frontend direkte hvis tilgjengelig (unngaar ekstra API-kall).
+    // For fylker (ingen knr sendt) brukes FYLKE_NR-hardkodingen eller dynamisk oppslag.
+    const { kommunenummere } = req.body;
+    let allKommuneNrs;
+    if (kommunenummere && kommunenummere.length > 0) {
+      // Frontend sendte eksakte kommunenummer — bruk dem direkte
+      allKommuneNrs = [...new Set(kommunenummere)];
+    } else {
+      // Fylkessok eller fallback: slaa opp via FYLKE_NR eller Brreg
+      allKommuneNrs = [...new Set(
+        (await Promise.all(locationList.map(loc => getKommuneNr(loc)))).flat()
+      )];
+    }
     if (!allKommuneNrs.length) return res.status(400).json({ error: "Fant ingen kommunenummer for valgt sted" });
 
     // Slaa sammen location-label for visning
