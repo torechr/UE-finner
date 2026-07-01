@@ -319,7 +319,7 @@ module.exports = async (req, res) => {
     // ikke faller ut naar mange kategorier er valgt samtidig og det er 300+ treff totalt.
     const top = companies
       .sort((a, b) => (b.antallAnsatte || 0) - (a.antallAnsatte || 0))
-      .slice(0, 150);
+      .slice(0, 300);
 
     // Hent alle dagligLeder parallelt i stedet for sekvensielle batches.
     // Brreg takler dette fint, og vi sparer 14 sekunder med 150 selskaper.
