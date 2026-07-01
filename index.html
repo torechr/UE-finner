@@ -142,6 +142,20 @@
     @media (max-width: 400px) {
       .eq-btn { flex: 1 1 100%; }
     }
+
+    /* Chip/flervalg for kommuner */
+    .loc-chips { display: flex; flex-wrap: wrap; gap: 5px; min-height: 36px; align-items: center;
+      border: 1px solid #d1d5db; border-radius: 8px; padding: 5px 10px; background: #fff;
+      cursor: text; transition: border-color 0.15s; }
+    .loc-chips:focus-within { border-color: #e85c0d; box-shadow: 0 0 0 3px rgba(232,92,13,0.1); }
+    .loc-chip { display: inline-flex; align-items: center; gap: 4px; background: #fff7f3;
+      border: 1px solid #fed7aa; color: #c2410c; border-radius: 5px; padding: 2px 8px;
+      font-size: 12px; font-weight: 500; white-space: nowrap; }
+    .loc-chip-x { background: none; border: none; cursor: pointer; color: #c2410c;
+      font-size: 14px; line-height: 1; padding: 0 1px; opacity: 0.6; }
+    .loc-chip-x:hover { opacity: 1; }
+    .loc-chip-input { border: none; outline: none; font-family: inherit; font-size: 14px;
+      color: #1a1a2e; min-width: 120px; flex: 1; background: transparent; padding: 2px 0; }
   </style>
 </head>
 <body>
@@ -186,12 +200,12 @@
   <div class="card">
     <div class="row">
       <div style="flex:1 1 200px;position:relative">
-        <label class="lbl">Fylke / Kommune</label>
-        <input type="text" id="locationInput" placeholder="Skriv kommune eller fylke..." autocomplete="off"
-          style="background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:9px 12px;color:#1a1a2e;font-size:16px;outline:none;font-family:inherit;width:100%"
-          oninput="filterLocations()" onfocus="showDropdown()" onblur="setTimeout(hideDropdown,200)" onkeydown="onLocKey(event)" />
+        <label class="lbl">Fylke / Kommune <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#9ca3af">(én eller flere)</span></label>
+        <div class="loc-chips" id="locChips" onclick="document.getElementById('locationInput').focus()">
+          <input type="text" id="locationInput" class="loc-chip-input" placeholder="Legg til kommune eller fylke..." autocomplete="off"
+            oninput="filterLocations()" onfocus="showDropdown()" onblur="setTimeout(hideDropdown,200)" onkeydown="onLocKey(event)" />
+        </div>
         <div id="locationDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #d1d5db;border-radius:8px;max-height:260px;overflow-y:auto;z-index:200;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.1)"></div>
-        <input type="hidden" id="location" />
       </div>
       <div style="flex:2 1 300px">
         <label class="lbl">Tjenestekategori <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#9ca3af">(velg én eller flere)</span></label>
@@ -251,7 +265,7 @@
 const STATUS_OPTIONS = ["","Kontaktet","Tilbud mottatt","Godkjent","Avvist"];
 const STATUS_CLASS = {"Kontaktet":"s-kontaktet","Tilbud mottatt":"s-tilbud","Godkjent":"s-godkjent","Avvist":"s-avvist"};
 
-let eqs=new Set(),companiesData=[],farmersData=[],currentTab="companies",currentSource="",currentView="list";
+let eqs=new Set(),selectedLocations=[],companiesData=[],farmersData=[],currentTab="companies",currentSource="",currentView="list";
 let favourites=JSON.parse(localStorage.getItem("subfinder_favs")||"[]");
 let projects=JSON.parse(localStorage.getItem("subfinder_projects")||"{}");
 let currentProject="";
@@ -384,10 +398,38 @@ function hideDropdown(){
 }
 
 function selectLocation(value, label){
-  document.getElementById("locationInput").value = label;
-  document.getElementById("location").value = value;
+  // Ikke legg til duplikater
+  if (selectedLocations.some(l => l.value === value)) {
+    document.getElementById("locationInput").value = "";
+    document.getElementById("locationDropdown").style.display = "none";
+    return;
+  }
+  selectedLocations.push({ value, label });
+  document.getElementById("locationInput").value = "";
   document.getElementById("locationDropdown").style.display = "none";
+  renderChips();
   updateBtn();
+}
+
+function removeLocation(value) {
+  selectedLocations = selectedLocations.filter(l => l.value !== value);
+  renderChips();
+  updateBtn();
+}
+
+function renderChips() {
+  const input = document.getElementById("locationInput");
+  const chips = document.getElementById("locChips");
+  // Fjern gamle chips (behold input-feltet)
+  [...chips.querySelectorAll(".loc-chip")].forEach(c => c.remove());
+  selectedLocations.forEach(loc => {
+    const chip = document.createElement("span");
+    chip.className = "loc-chip";
+    chip.innerHTML = `${loc.label} <button class="loc-chip-x" onmousedown="event.preventDefault();removeLocation('${loc.value.replace(/'/g,"\'")}')">×</button>`;
+    chips.insertBefore(chip, input);
+  });
+  // Oppdater placeholder
+  input.placeholder = selectedLocations.length ? "Legg til flere..." : "Legg til kommune eller fylke...";
 }
 
 function onLocKey(e){
@@ -425,11 +467,12 @@ function updateSelectAllBtn(){
   btn.classList.toggle("active",allSelected);
 }
 function updateBtn(){
-  const ok=!!document.getElementById("location").value&&eqs.size>0;
-  document.getElementById("searchBtn").disabled=!ok;
-  const isCounty=["Agder","Akershus","Buskerud","Finnmark","Innlandet","Møre og Romsdal","Nordland","Oslo","Rogaland","Telemark","Troms","Trøndelag","Vestfold","Vestland","Østfold"].includes(document.getElementById("location").value);
-  document.getElementById("searchAllBtn").disabled=!ok||!isCounty;
-  document.getElementById("searchAllBtn").style.display=isCounty?"":"none";
+  const ok = selectedLocations.length > 0 && eqs.size > 0;
+  document.getElementById("searchBtn").disabled = !ok;
+  const COUNTIES = ["Agder","Akershus","Buskerud","Finnmark","Innlandet","Møre og Romsdal","Nordland","Oslo","Rogaland","Telemark","Troms","Trøndelag","Vestfold","Vestland","Østfold"];
+  const isCounty = selectedLocations.length === 1 && COUNTIES.includes(selectedLocations[0].value);
+  document.getElementById("searchAllBtn").disabled = !ok || !isCounty;
+  document.getElementById("searchAllBtn").style.display = isCounty ? "" : "none";
 }
 function show(id){document.getElementById(id).classList.remove("hidden");}
 function hide(id){document.getElementById(id).classList.add("hidden");}
@@ -443,7 +486,7 @@ async function doSearch(complete=false){
   companiesData=[];farmersData=[];
   try{
     const r=await fetch("/api/search",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({location, equipments:[...eqs], complete})});
+      body:JSON.stringify({locations: selectedLocations.map(l=>l.value), equipments:[...eqs], complete})});
     const d=await r.json();
     if(d.error)throw new Error(d.error);
     companiesData=d.companies||[];
@@ -457,9 +500,10 @@ function setTab(t){currentTab=t;document.getElementById("tabCompanies").classLis
 function renderResults(location){
   const eqLabels={vinter:"Vinter",vinterlastebil:"Vinter (lastebil)",vintertraktor:"Vinter (traktor)",trafikk:"Trafikkdirigering",renhold:"Renhold",naturlike:"Naturlike arealer",parklike:"Parklike arealer",graving:"Graving",pukkverk:"Pukkverk / steinbrudd"};
   const eqLabel=[...eqs].map(e=>eqLabels[e]||e).join(" + ");
+  const locationLabel = selectedLocations.map(l=>l.label).join(" + ");
   hide("tabs");
   const bc=companiesData.filter(c=>c.score===0).length;
-  let s=`<strong>${companiesData.length} selskaper</strong> · ${location} · ${eqLabel}`;
+  let s=`<strong>${companiesData.length} selskaper</strong> · ${locationLabel} · ${eqLabel}`;
   if(currentSource==="brreg")s+=`<span class="src-badge src-brreg">Brreg</span>`;
   if(currentSource==="ai")s+=`<span class="src-badge src-ai">AI</span>`;
   if(bc>0)s+=`<span class="src-badge" style="background:#fee2e2;color:#991b1b">⚠ ${bc} konkurs</span>`;
@@ -565,7 +609,7 @@ function setView(v){
 
 function exportCSV(){
   const data=currentTab==="farmers"?farmersData:companiesData;
-  const loc=document.getElementById("location").value;
+  const loc=selectedLocations.map(l=>l.label).join("-");
   const eqLabels={vinterlastebil:"Vinter (lastebil)",vintertraktor:"Vinter (traktor)",trafikk:"Trafikkdirigering",renhold:"Renhold",naturlike:"Naturlike arealer",parklike:"Parklike arealer",graving:"Graving",pukkverk:"Pukkverk / steinbrudd"};
   const kategori=[...eqs].map(e=>eqLabels[e]||e).join(" + ");
   const h=["Navn","Org.nr","Kommune","Kategori","Bransje","Ansatte","Stiftet","Org.form","Daglig leder","Telefon","Epost","Score","Anbefaling","Begrunnelse","Status","Risikoer","Skatteattest","Brreg","Proff","Soliditet","MEF","NLF","Doffin"];
