@@ -3,18 +3,18 @@ const Anthropic = require("@anthropic-ai/sdk");
 const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // NB: Brreg sitt API krever eksakt match pa naeringskode (ikke prefiks-sok).
-// Derfor ma alle 5-sifrede SN2007-koder under en gruppe listes eksplisitt.
-// Gruppe 43.12 Grunnarbeid bestar av: 43.110, 43.120, 43.130, 43.190
+// Alle koder ma vaere fullstendige 5-sifrede SN2007-koder inkl. trailing null,
+// f.eks. "81.290" og ikke "81.29" — ellers returnerer Brreg 0 treff for den koden.
 const NACE = {
-  vinter:         ["81.29", "49.41", "43.110", "43.120", "43.130", "43.190", "01.61"],
-  vinterlastebil: ["81.29", "49.41", "49.42", "52.29", "43.110", "43.120", "43.130", "43.190"],
-  vintertraktor:  ["81.29", "01.61", "01.62", "01.41", "01.45", "81.30", "43.110", "43.120", "43.130", "43.190"],
-  trafikk:        ["80.10", "52.21", "74.90", "43.99"],
-  renhold:        ["81.29", "81.21", "37.00", "38.11"],
-  naturlike:      ["81.30", "02.10", "02.40", "01.61", "43.110", "43.120", "43.130", "43.190"],
-  parklike:       ["81.30", "01.19", "01.13", "02.10", "02.40"],
-  graving:        ["43.110", "43.120", "43.130", "43.190", "43.13", "42.11", "42.21", "41.20", "43.99"],
-  pukkverk:       ["08.11", "08.12", "08.91", "23.70"],
+  vinter:         ["81.290", "49.410", "43.110", "43.120", "43.130", "43.190", "01.610"],
+  vinterlastebil: ["81.290", "49.410", "49.420", "52.290", "43.110", "43.120", "43.130", "43.190"],
+  vintertraktor:  ["81.290", "01.610", "01.620", "01.410", "01.450", "81.300", "43.110", "43.120", "43.130", "43.190"],
+  trafikk:        ["80.100", "52.210", "74.900", "43.990"],
+  renhold:        ["81.290", "81.210", "37.000", "38.110"],
+  naturlike:      ["81.300", "02.100", "02.400", "01.610", "43.110", "43.120", "43.130", "43.190"],
+  parklike:       ["81.300", "01.190", "01.130", "02.100", "02.400"],
+  graving:        ["43.110", "43.120", "43.130", "43.190", "42.110", "42.210", "41.200", "43.990"],
+  pukkverk:       ["08.110", "08.120", "08.910", "23.700"],
 };
 
 const KEYWORDS = {
@@ -223,7 +223,7 @@ async function brregSearchByKommune(kommuneNr, naceCodes, keywords, purposeKeywo
   // (eksempel fra dokumentasjonen: naeringskode=41.109,01.1). Tidligere ble det sendt ett
   // kall PER kode, noe som i kombinasjon med den lange organisasjonsform-listen kunne gi 400.
   const nacePromise = naceCodes.length > 0
-    ? brregFetch(`https://data.brreg.no/enhetsregisteret/api/enheter?naeringskode=${naceCodes.join(",")}&kommunenummer=${kommuneNr}&size=50&konkurs=false&underAvvikling=false&organisasjonsform=AS,ENK,ANS,DA,SA,NUF,BA,STI,FLI`)
+    ? brregFetch(`https://data.brreg.no/enhetsregisteret/api/enheter?naeringskode=${naceCodes.join(",")}&kommunenummer=${kommuneNr}&size=100&konkurs=false&underAvvikling=false&organisasjonsform=AS,ENK,ANS,DA,SA,NUF,BA,STI,FLI`)
         .then(data => data?._embedded?.enheter || [])
         .catch(() => [])
     : Promise.resolve([]);
@@ -410,11 +410,19 @@ module.exports = async (req, res) => {
     const final = active.map(c => {
       const ai = scoreMap.get(c.orgnr) || {};
       // Default score
-      const defaultScore = c.ansatte >= 10 ? 6 : c.ansatte >= 3 ? 5 : 4;
+      // Selskaper som matcher pa NACE-kode (ikke bare navn/sokord) fa bonus.
+      // Brreg returnerer naeringskode1.kode pa enheten — dette er det sterkeste signalet.
+      const naceMatch = allNace.some(n => c.nace && c.nace.toLowerCase().includes(n.replace(".", "").slice(0,4).toLowerCase()));
+      const defaultScore = c.ansatte >= 20 ? 8
+                         : c.ansatte >= 10 ? 7
+                         : c.ansatte >= 3  ? 6
+                         : 4;
+      // Boost score hvis NACE matcher direkte (indikerer kjernevirksomhet, ikke bare bifunn via sokord)
+      const finalDefaultScore = naceMatch ? Math.min(defaultScore + 1, 9) : defaultScore;
       return {
         ...c,
-        score: ai.score || defaultScore,
-        anbefaling: ai.anbefaling || (defaultScore >= 6 ? "Mulig" : "Lav prioritet"),
+        score: ai.score || finalDefaultScore,
+        anbefaling: ai.anbefaling || (finalDefaultScore >= 7 ? "Anbefalt" : finalDefaultScore >= 5 ? "Mulig" : "Lav prioritet"),
         begrunnelse: ai.begrunnelse || "",
         risikoer: ai.risikoer || [],
       };
