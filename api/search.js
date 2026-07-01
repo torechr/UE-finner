@@ -352,19 +352,44 @@ Vekt: riktig kompetanse > kapasitet > erfaring/alder > storrelse.`;
 module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
   try {
-    const { location, equipment, equipments, complete } = req.body;
+    const { location, locations, equipment, equipments, complete } = req.body;
+
+    // Støtte enkelt location eller locations-array (flervalg av kommuner)
+    const locationList = (locations && locations.length > 0) ? locations : (location ? [location] : []);
+    if (!locationList.length) return res.status(400).json({ error: "Mangler location" });
 
     // Support single or multiple categories
     const eqList = equipments && equipments.length > 0 ? equipments : [equipment];
-    if (!location || !eqList[0]) return res.status(400).json({ error: "Mangler location eller equipment" });
+    if (!eqList[0]) return res.status(400).json({ error: "Mangler equipment" });
 
     // Merge NACE, keywords and purposeKeywords from all categories
     const allNace = [...new Set(eqList.flatMap(eq => NACE[eq] || []))];
     const allKeywords = [...new Set(eqList.flatMap(eq => KEYWORDS[eq] || []))];
     const allPurpose = [...new Set(eqList.flatMap(eq => PURPOSE_KEYWORDS[eq] || []))];
 
-    const companies = await brregSearch(location, allNace, allKeywords, allPurpose, complete === true);
-    console.log(`Brreg: ${companies.length} treff for ${location}/${eqList.join('+')}`);
+    // Hent kommunenummer for alle valgte steder og slaa sammen (deduplicert)
+    const allKommuneNrs = [...new Set(
+      (await Promise.all(locationList.map(loc => getKommuneNr(loc)))).flat()
+    )];
+    if (!allKommuneNrs.length) return res.status(400).json({ error: "Fant ingen kommunenummer for valgt sted" });
+
+    // Slaa sammen location-label for visning
+    const locationLabel = locationList.join(", ");
+
+    // Soek pa tvers av alle kommuner (allerede parallel i brregSearch)
+    const isCounty = allKommuneNrs.length > 5 && locationList.length === 1;
+    const toSearch = isCounty && !complete ? allKommuneNrs.slice(0, 5) : allKommuneNrs;
+    const rawResults = (await Promise.all(
+      toSearch.map(nr => brregSearchByKommune(nr, allNace, allKeywords, allPurpose))
+    )).flat();
+    const seen = new Set();
+    const companies = rawResults.filter(e => {
+      if (seen.has(e.organisasjonsnummer)) return false;
+      seen.add(e.organisasjonsnummer);
+      return true;
+    });
+    const location = locationLabel;
+    console.log(`Brreg: ${companies.length} treff for ${locationLabel}/${eqList.join('+')}`);
 
     if (companies.length === 0) {
       return res.json({ companies: [], source: "brreg" });
