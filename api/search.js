@@ -401,23 +401,51 @@ module.exports = async (req, res) => {
       ))
     ]);
 
-    const enriched = top.map((c, idx) => ({
-      navn: c.navn,
-      orgnr: c.organisasjonsnummer,
-      kommune: c.forretningsadresse?.kommune || location,
-      adresse: (c.forretningsadresse?.adresse || []).join(", "),
-      postnummer: c.forretningsadresse?.postnummer || "",
-      poststed: c.forretningsadresse?.poststed || "",
-      nace: c.naeringskode1?.beskrivelse || "",
-      ansatte: c.antallAnsatte || 0,
-      stiftet: c.stiftelsesdato?.slice(0, 4) || "",
-      organisasjonsform: c.organisasjonsform?.beskrivelse || "",
-      telefon: c.telefon || c.mobil || "",
-      epost: c.epostadresse || "",
-      nettside: c.hjemmeside || "",
-      dagligLeder: managerMap.get(c.organisasjonsnummer) || "",
-      konkurs: bankruptResults[idx],
-    }));
+    // Kategorier der ENK uten ansatte typisk ikke har kapasitet til driftskontrakt-volum.
+    // For vintertraktor, naturlike og parklike er ENK/bonde uten ansatte fullt ut aktuell.
+    const operativeKategorier = ["graving", "vinterlastebil", "renhold", "pukkverk", "trafikk"];
+    const erOperativKategori = eqList.some(eq => operativeKategorier.includes(eq));
+    const kunOperative = eqList.every(eq => operativeKategorier.includes(eq));
+
+    const enriched = top
+      .filter(c => {
+        // Filtrer holdingselskaper (hjelpeenhetskode 70.100 eller "HOLDING"/"INVEST" i navn uten operativ NACE)
+        const navn = c.navn?.toUpperCase() || "";
+        const hjelp = c.hjelpeenhetskode?.kode || "";
+        const naceKode = c.naeringskode1?.kode || "";
+        const operativeNace = ["43.", "42.", "41.", "81.", "49.", "52.", "80.", "74.", "37.", "38.", "02.", "01.", "08.", "23."];
+        const harOperativNace = operativeNace.some(p => naceKode.startsWith(p));
+        if (hjelp === "70.100" && !harOperativNace) return false;
+        if ((navn.includes("HOLDING") || navn.includes(" INVEST ") || navn.endsWith(" INVEST AS")) && !harOperativNace) return false;
+        // For rent operative kategorier (graving, lastebil, renhold osv.) — filtrer ENK med 0 ansatte og stiftet siste 2 ar
+        if (kunOperative) {
+          const orgform = c.organisasjonsform?.kode || "";
+          const stiftetAar = parseInt(c.stiftelsesdato?.slice(0, 4) || "0");
+          const alder = new Date().getFullYear() - stiftetAar;
+          if (orgform === "ENK" && (c.antallAnsatte || 0) === 0 && alder < 2) return false;
+        }
+        return true;
+      })
+      .map((c, idx) => ({
+        navn: c.navn,
+        orgnr: c.organisasjonsnummer,
+        kommune: c.forretningsadresse?.kommune || location,
+        adresse: (c.forretningsadresse?.adresse || []).join(", "),
+        postnummer: c.forretningsadresse?.postnummer || "",
+        poststed: c.forretningsadresse?.poststed || "",
+        nace: c.naeringskode1?.beskrivelse || "",
+        naceKode: c.naeringskode1?.kode || "",
+        ansatte: c.antallAnsatte || 0,
+        stiftet: c.stiftelsesdato?.slice(0, 4) || "",
+        organisasjonsform: c.organisasjonsform?.beskrivelse || "",
+        organisasjonsformKode: c.organisasjonsform?.kode || "",
+        telefon: c.telefon || c.mobil || "",
+        epost: c.epostadresse || "",
+        nettside: c.hjemmeside || "",
+        proff: `https://www.proff.no/selskap/-/-/-/${c.organisasjonsnummer}/`,
+        dagligLeder: managerMap.get(c.organisasjonsnummer) || "",
+        konkurs: bankruptResults[idx],
+      }));
 
     const active = enriched.filter(c => !c.konkurs);
     const bankrupt = enriched.filter(c => c.konkurs);
@@ -430,13 +458,22 @@ module.exports = async (req, res) => {
       // Default score
       // Selskaper som matcher pa NACE-kode (ikke bare navn/sokord) fa bonus.
       // Brreg returnerer naeringskode1.kode pa enheten — dette er det sterkeste signalet.
-      const naceMatch = allNace.some(n => c.nace && c.nace.toLowerCase().includes(n.replace(".", "").slice(0,4).toLowerCase()));
-      const defaultScore = c.ansatte >= 20 ? 8
-                         : c.ansatte >= 10 ? 7
-                         : c.ansatte >= 3  ? 6
-                         : 4;
+      const naceMatch = allNace.some(n => c.naceKode && c.naceKode.startsWith(n.slice(0,5)));
+      const alder = c.stiftet ? (new Date().getFullYear() - parseInt(c.stiftet)) : 0;
+      // Aldersfaktor: 10+ aar i bransjen = etablert, 5-9 = erfaren, <3 = nystartet risiko
+      const alderBonus = alder >= 10 ? 2 : alder >= 5 ? 1 : alder < 3 ? -1 : 0;
+      // ENK/bonde-bonus for traktor/naturlike/parklike — disse er fullt ut relevante
+      const traktorKategorier = ["vintertraktor", "naturlike", "parklike", "vinter"];
+      const erTraktorKategori = eqList.some(eq => traktorKategorier.includes(eq));
+      const enkBonus = (c.organisasjonsformKode === "ENK" && erTraktorKategori && naceMatch) ? 1 : 0;
+      const baseScore = c.ansatte >= 20 ? 7
+                      : c.ansatte >= 10 ? 6
+                      : c.ansatte >= 3  ? 5
+                      : c.ansatte >= 1  ? 4
+                      : 3;
       // Boost score hvis NACE matcher direkte (indikerer kjernevirksomhet, ikke bare bifunn via sokord)
-      const finalDefaultScore = naceMatch ? Math.min(defaultScore + 1, 9) : defaultScore;
+      const naceBonus = naceMatch ? 1 : 0;
+      const finalDefaultScore = Math.min(Math.max(baseScore + naceBonus + alderBonus + enkBonus, 1), 9);
       return {
         ...c,
         score: ai.score || finalDefaultScore,
