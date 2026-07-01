@@ -308,7 +308,7 @@ module.exports = async (req, res) => {
       seen.add(e.organisasjonsnummer);
       return true;
     });
-    const location = locationLabel;
+    // location = locationLabel (allerede definert som const ovenfor via locationList)
     console.log(`Brreg: ${companies.length} treff for ${locationLabel}/${eqList.join('+')}`);
 
     if (companies.length === 0) {
@@ -366,7 +366,7 @@ module.exports = async (req, res) => {
       .map((c, idx) => ({
         navn: c.navn,
         orgnr: c.organisasjonsnummer,
-        kommune: c.forretningsadresse?.kommune || location,
+        kommune: c.forretningsadresse?.kommune || locationLabel,
         adresse: (c.forretningsadresse?.adresse || []).join(", "),
         postnummer: c.forretningsadresse?.postnummer || "",
         poststed: c.forretningsadresse?.poststed || "",
