@@ -225,31 +225,31 @@ async function brregSearchByKommune(kommuneNr, naceCodes, keywords, purposeKeywo
   // Brreg sorterer alfabetisk og har maks 100 per side.
   // Vi henter inntil 3 sider (300 treff) for aa fange alle relevante selskaper
   // uavhengig av hvor de havner alfabetisk (f.eks. "PER TRY AS" pa side 2).
+  // Hent side 0 foerst for aa faa totalElements, start deretter resten parallelt
   async function fetchNacePages() {
     if (naceCodes.length === 0) return [];
     const baseUrl = `https://data.brreg.no/enhetsregisteret/api/enheter?naeringskode=${naceCodes.join(",")}&kommunenummer=${kommuneNr}&size=100&konkurs=false&underAvvikling=false&organisasjonsform=AS,ENK,ANS,DA,SA,NUF,BA,STI,FLI`;
     const page0 = await brregFetch(`${baseUrl}&page=0`).catch(() => null);
-    const results = page0?._embedded?.enheter || [];
+    const page0results = page0?._embedded?.enheter || [];
     const total = page0?.page?.totalElements || 0;
-    if (total > 100) {
-      const page1 = await brregFetch(`${baseUrl}&page=1`).catch(() => null);
-      results.push(...(page1?._embedded?.enheter || []));
-    }
-    if (total > 200) {
-      const page2 = await brregFetch(`${baseUrl}&page=2`).catch(() => null);
-      results.push(...(page2?._embedded?.enheter || []));
-    }
-    return results;
+    // Hent eventuelle ekstra sider parallelt
+    const extraPages = [];
+    if (total > 100) extraPages.push(brregFetch(`${baseUrl}&page=1`).catch(() => null));
+    if (total > 200) extraPages.push(brregFetch(`${baseUrl}&page=2`).catch(() => null));
+    const extra = await Promise.all(extraPages);
+    return [...page0results, ...extra.flatMap(p => p?._embedded?.enheter || [])];
   }
-  const nacePromise = fetchNacePages();
 
-  const keywordPromises = (keywords || []).map(kw =>
+  // Hopp over keyword-sok hvis NACE allerede gir nok treff (spar mange API-kall)
+  const naceResults = await fetchNacePages();
+  const skipKeywords = naceResults.length >= 80;
+  const keywordPromises = skipKeywords ? [] : (keywords || []).map(kw =>
     brregFetch(`https://data.brreg.no/enhetsregisteret/api/enheter?navn=${encodeURIComponent(kw)}&kommunenummer=${kommuneNr}&size=20&konkurs=false&underAvvikling=false&organisasjonsform=AS,ENK,ANS,DA,SA,NUF,BA,STI,FLI`)
       .then(data => data?._embedded?.enheter || [])
       .catch(() => [])
   );
-  const results = await Promise.all([nacePromise, ...keywordPromises]);
-  return results.flat();
+  const keywordResults = await Promise.all(keywordPromises);
+  return [...naceResults, ...keywordResults.flat()];
 }
 
 async function brregSearch(location, naceCodes, keywords, purposeKeywords, complete=false) {
@@ -376,30 +376,22 @@ module.exports = async (req, res) => {
       .sort((a, b) => (b.antallAnsatte || 0) - (a.antallAnsatte || 0))
       .slice(0, 150);
 
-    // Batch dagligLeder fetches: 10 at a time to stay within timeout
+    // Hent alle dagligLeder parallelt i stedet for sekvensielle batches.
+    // Brreg takler dette fint, og vi sparer 14 sekunder med 150 selskaper.
     async function fetchAllManagers(list) {
-      const results = new Map();
-      for (let i = 0; i < list.length; i += 10) {
-        const batch = list.slice(i, i + 10);
-        const batchResults = await Promise.all(
-          batch.map(c => fetchDagligLeder(c.organisasjonsnummer)
-            .then(name => [c.organisasjonsnummer, name])
-            .catch(() => [c.organisasjonsnummer, ""])
-          )
-        );
-        batchResults.forEach(([orgnr, name]) => results.set(orgnr, name));
-      }
-      return results;
+      const pairs = await Promise.all(
+        list.map(c => fetchDagligLeder(c.organisasjonsnummer)
+          .then(name => [c.organisasjonsnummer, name])
+          .catch(() => [c.organisasjonsnummer, ""])
+        )
+      );
+      return new Map(pairs);
     }
 
-    const [managerMap, bankruptResults] = await Promise.all([
-      fetchAllManagers(top),
-      Promise.all(top.map(c =>
-        (c.antallAnsatte || 0) > 0
-          ? checkBankruptcy(c.organisasjonsnummer).catch(() => false)
-          : Promise.resolve(false)
-      ))
-    ]);
+    // konkurs/underAvvikling er allerede filtrert i Brreg-spoerringa (konkurs=false&underAvvikling=false).
+    // Keyword-soeket har samme filter. Vi dropper dermed checkBankruptcy-kallet (spar 150 API-kall).
+    const managerMap = await fetchAllManagers(top);
+    const bankruptResults = top.map(() => false);
 
     // Kategorier der ENK uten ansatte typisk ikke har kapasitet til driftskontrakt-volum.
     // For vintertraktor, naturlike og parklike er ENK/bonde uten ansatte fullt ut aktuell.
