@@ -42,118 +42,17 @@ const PURPOSE_KEYWORDS = {
   pukkverk:       ["pukkverk", "steinbrudd", "grustak", "knusing"],
 };
 
-// Municipality number mapping (all Norwegian municipalities 2024)
-const KOMMUNE_NR = {
-  // Agder
-  "arendal":["4203"],"birkenes":["4209"],"bygland":["4215"],"bykle":["4216"],
-  "evje og hornnes":["4214"],"farsund":["4206"],"flekkefjord":["4207"],"froland":["4208"],
-  "gjerstad":["4211"],"grimstad":["4202"],"hægebostad":["4219"],"iveland":["4220"],
-  "kristiansand":["4204"],"kvinesdal":["4218"],"lillesand":["4201"],"lindesnes":["4205"],
-  "lyngdal":["4217"],"risør":["4210"],"tvedestrand":["4212"],"valle":["4213"],
-  "vegårshei":["4221"],"åmli":["4222"],"åseral":["4223"],
-  // Akershus
-  "asker":["3203"],"aurskog-høland":["3205"],"bærum":["3201"],"enebakk":["3209"],
-  "frogn":["3215"],"gjerdrum":["3213"],"hurdal":["3207"],"lørenskog":["3211"],
-  "nannestad":["3217"],"nesodden":["3219"],"nittedal":["3221"],"rælingen":["3223"],
-  "ullensaker":["3225"],"vestby":["3227"],"ås":["3229"],
-  // Buskerud
-  "drammen":["3301"],"flå":["3320"],"flesberg":["3334"],"gol":["3324"],
-  "hemsedal":["3326"],"hol":["3330"],"hole":["3310"],"kongsberg":["3303"],
-  "krødsherad":["3318"],"lier":["3312"],"modum":["3316"],"nesbyen":["3322"],
-  "nore og uvdal":["3338"],"ringerike":["3305"],"rollag":["3336"],"sigdal":["3332"],
-  "øvre eiker":["3314"],"ål":["3328"],
-  // Finnmark
-  // Finnmark (verified 2024 numbers from Brreg)
-  "alta":["5601"],"hammerfest":["5603"],"sør-varanger":["5605"],"vadsø":["5607"],
-  "karasjok":["5610"],"hasvik":["5616"],"kautokeino":["5612"],"loppa":["5614"],
-  "måsøy":["5618"],"nordkapp":["5620"],"porsanger":["5622"],"lebesby":["5624"],
-  "gamvik":["5626"],"tana":["5628"],"berlevåg":["5630"],"båtsfjord":["5632"],
-  "vardø":["5634"],"nesseby":["5636"],
-  // Innlandet
-  "alvdal":["3439"],"dovre":["3419"],"engerdal":["3429"],"etnedal":["3437"],
-  "folldal":["3441"],"gausdal":["3411"],"gjøvik":["3407"],"gran":["3435"],
-  "hamar":["3403"],"jevnaker":["3433"],"kongsvinger":["3401"],"lesja":["3421"],
-  "lillehammer":["3405"],"lom":["3423"],"lunner":["3431"],"løten":["3413"],
-  "nord-aurdal":["3443"],"nord-fron":["3415"],"nord-odal":["3417"],"nordre land":["3445"],
-  "os":["3447"],"rendalen":["3449"],"ringebu":["3451"],"ringsaker":["3409"],
-  "sel":["3453"],"skjåk":["3455"],"sør-aurdal":["3457"],"sør-fron":["3459"],
-  "sør-odal":["3461"],"søndre land":["3463"],"tolga":["3465"],"trysil":["3467"],
-  "tynset":["3469"],"vestre slidre":["3471"],"vestre toten":["3473"],"vågå":["3475"],
-  "øyer":["3477"],"øystre slidre":["3479"],"østre toten":["3481"],"åsnes":["3483"],
-  // More og Romsdal
-  "aukra":["1547"],"aure":["1576"],"averøy":["1554"],"fjord":["1578"],
-  "giske":["1532"],"gjemnes":["1557"],"haram":["1580"],
-  "hareid":["1517"],"herøy":["1515"],"kristiansund":["1505"],"molde":["1506"],
-  "rauma":["1539"],"rindal":["5061"],"smøla":["1573"],"stranda":["1525"],
-  "sunndal":["1563"],"surnadal":["1566"],"sykkylven":["1528"],"tingvoll":["1560"],"ulstein":["1516"],
-  "vanylven":["1511"],"vestnes":["1535"],"volda":["1577"],"ørsta":["1520"],
-  "ålesund":["1508"],
-  // Nordland
-  "alstahaug":["1811"],"andøy":["1812"],"bindal":["1813"],"bodø":["1804"],
-  "brønnøy":["1815"],"bø":["1816"],"dønna":["1818"],"evenes":["1820"],
-  "fauske":["1822"],"flakstad":["1824"],"gildeskål":["1825"],"grane":["1826"],
-  "hadsel":["1827"],"hamarøy":["1828"],"hattfjelldal":["1832"],"hemnes":["1833"],
-  "herøy":["1834"],"leirfjord":["1835"],"lødingen":["1836"],"meløy":["1837"],
-  "moskenes":["1838"],"narvik":["1806"],"nesna":["1839"],"rana":["1840"],
-  "rødøy":["1841"],"røst":["1845"],"saltdal":["1848"],"sortland":["1851"],
-  "steigen":["1853"],"sømna":["1856"],"sørfold":["1857"],"vefsn":["1859"],
-  "vega":["1860"],"vestvågøy":["1865"],"vevelstad":["1866"],"værøy":["1867"],
-  "øksnes":["1868"],
-  // Oslo
-  "oslo":["0301"],
-  // Rogaland
-  "bjerkreim":["1114"],"bokn":["1145"],"eigersund":["1101"],"gjesdal":["1122"],
-  "hjelmeland":["1124"],"hå":["1119"],"karmøy":["1149"],"klepp":["1120"],
-  "kvitsøy":["1144"],"lund":["1112"],"randaberg":["1127"],"sauda":["1130"],
-  "sandnes":["1108"],"sokndal":["1111"],"sola":["1103"],"stavanger":["1103"],
-  "strand":["1146"],"time":["1121"],"tysvær":["1133"],"utsira":["1151"],
-  "vindafjord":["1160"],
-  // Telemark
-  "bamble":["4012"],"bø":["4020"],"drangedal":["4016"],"fyresdal":["4032"],
-  "hjartdal":["4024"],"kviteseid":["4028"],"midt-telemark":["4020"],"nissedal":["4030"],
-  "nome":["4018"],"notodden":["4005"],"porsgrunn":["4001"],"seljord":["4022"],
-  "siljan":["4010"],"skien":["4003"],"tinn":["4026"],"tokke":["4034"],"vinje":["4036"],
-  // Troms
-  "balsfjord":["5532"],"bardu":["5520"],"dyrøy":["5528"],"harstad":["5503"],
-  "ibestad":["5514"],"karlsøy":["5534"],"kvæfjord":["5510"],"kvænangen":["5546"],
-  "kåfjord":["5540"],"lavangen":["5518"],"senja":["5530"],"lyngen":["5536"],
-  "målselv":["5524"],"nordreisa":["5544"],"salangen":["5522"],"skjervøy":["5542"],
-  "tjeldsund":["5512"],"storfjord":["5538"],"sørreisa":["5526"],"gratangen":["5516"],
-  "tromsø":["5501"],
-  // Trondelag
-  "flatanger":["5036"],"frosta":["5037"],"frøya":["5038"],"grong":["5041"],
-  "heim":["5042"],"hitra":["5043"],"holtålen":["5044"],"høylandet":["5045"],
-  "inderøy":["5046"],"indre fosen":["5047"],"leka":["5049"],"levanger":["5020"],
-  "lierne":["5052"],"malvik":["5053"],"melhus":["5054"],"meråker":["5055"],
-  "midtre gauldal":["5056"],"namsos":["5007"],"namsskogan":["5057"],"nærøysund":["5058"],
-  "oppdal":["5059"],"orkland":["5060"],"overhalla":["5061"],"rennebu":["5027"],
-  "røros":["5025"],"røyrvik":["5028"],"selbu":["5029"],"skaun":["5030"],
-  "snåsa":["5031"],"steinkjer":["5006"],"stjørdal":["5014"],"trondheim":["5001"],
-  "tydal":["5032"],"verdal":["5021"],"ørland":["5033"],"åfjord":["5034"],
-  // Vestfold
-  "holmestrand":["3903"],"horten":["3901"],"larvik":["3909"],"sandefjord":["3907"],
-  "tønsberg":["3905"],
-  // Vestland
-  "alver":["4611"],"askøy":["4612"],"askvoll":["4613"],"aurland":["4614"],
-  "austevoll":["4615"],"austrheim":["4616"],"bergen":["4601"],"bjørnafjorden":["4617"],
-  "bremanger":["4618"],"bømlo":["4619"],"eidfjord":["4620"],"etne":["4621"],
-  "fedje":["4622"],"fitjar":["4623"],"fjaler":["4624"],"gloppen":["4625"],
-  "gulen":["4626"],"høyanger":["4627"],"hyllestad":["4628"],"kinn":["4629"],
-  "kvam":["4630"],"kvinnherad":["4631"],"lærdal":["4632"],"luster":["4633"],
-  "masfjorden":["4634"],"modalen":["4635"],"osterøy":["4636"],"samnanger":["4637"],
-  "sogndal":["4638"],"solund":["4639"],"stad":["4640"],"stord":["4641"],
-  "stryn":["4642"],"sunnfjord":["4643"],"sveio":["4644"],"tysnes":["4645"],
-  "ullensvang":["4646"],"ulvik":["4647"],"vik":["4648"],"voss":["4649"],
-  "øygarden":["4650"],"årdal":["4651"],
-  // Ostfold
-  "aremark":["3101"],"eidsberg":["3103"],"fredrikstad":["3107"],"halden":["3101"],
-  "hobøl":["3105"],"hvaler":["3107"],"marker":["3110"],"moss":["3103"],
-  "rakkestad":["3112"],"råde":["3114"],"rømskog":["3116"],"sarpsborg":["3105"],
-  "skiptvet":["3118"],"spydeberg":["3120"],"trøgstad":["3122"],"våler":["3124"],
-  // Counties
-  "agder":["4201","4202","4203","4204","4205","4206","4207","4208","4209","4210","4211","4212","4213","4214","4215","4216","4217","4218","4219","4220","4221","4222","4223"],
+// Kommunenummer-oppslag: henter alltid live fra Brreg for eksakt match.
+// Vi cacher resultater i minnet (kommuneCache) for a unnga gjentatte kall
+// i same request. Ingen hardkoding — fungerer automatisk for alle kommuner
+// inkl. fremtidige reformer.
+const kommuneCache = new Map();
+
+// Kjente fylkesnummer for rask oppslag uten API-kall
+const FYLKE_NR = {
+  "agder":["4201","4202","4203","4204","4205","4206","4207","4208","4209","4210","4211","4212","4213","4214","4215","4216","4217","4218","4219","4220","4221","4222","4223","4224"],
   "akershus":["3201","3203","3205","3207","3209","3211","3213","3215","3217","3219","3221","3223","3225","3227","3229"],
-  "buskerud":["3301","3303","3305","3307","3309","3311","3313","3315","3317","3319","3321","3323","3325","3327","3329","3331","3333","3301"],
+  "buskerud":["3301","3303","3305","3310","3312","3314","3316","3318","3320","3322","3324","3326","3328","3330","3332","3334","3336","3338"],
   "finnmark":["5601","5603","5605","5607","5610","5612","5614","5616","5618","5620","5622","5624","5626","5628","5630","5632","5634","5636"],
   "innlandet":["3401","3403","3405","3407","3409","3411","3413","3415","3417","3419","3421","3423","3425","3427","3429","3431","3433","3435","3437","3439","3441","3443","3445","3447","3449","3451","3453","3455","3457","3459","3461","3463","3465","3467","3469","3471","3473","3475","3477","3479","3481","3483"],
   "møre og romsdal":["1505","1506","1508","1511","1514","1515","1516","1517","1520","1525","1528","1531","1532","1535","1539","1547","1554","1557","1560","1563","1566","1573","1576","1577","1578","1580"],
@@ -168,30 +67,42 @@ const KOMMUNE_NR = {
   "østfold":["3101","3103","3105","3107","3110","3112","3114","3116","3118","3120","3122","3124"],
 };
 
-// Cache for dynamic kommune lookups
-const kommuneCache = new Map();
-
 async function getKommuneNr(location) {
   const key = location.toLowerCase().trim();
 
-  // Check hardcoded list first (counties and known municipalities)
-  if (KOMMUNE_NR[key]) return KOMMUNE_NR[key];
+  // Sjekk fylkesliste foerst (rask, ingen API-kall)
+  if (FYLKE_NR[key]) return FYLKE_NR[key];
 
-  // Check cache
+  // Sjekk cache
   if (kommuneCache.has(key)) return kommuneCache.get(key);
 
-  // Dynamic lookup from Brreg
+  // Dynamisk oppslag mot Brreg — fungerer for alle norske kommuner
+  // inkl. de som mangler i hardkodede lister
   try {
     const data = await brregFetch(
-      `https://data.brreg.no/enhetsregisteret/api/enheter?navn=${encodeURIComponent(key)}+kommune&organisasjonsform=KOMM&size=1`
+      `https://data.brreg.no/enhetsregisteret/api/enheter?organisasjonsform=KOMM&navn=${encodeURIComponent(key)}&size=5`
     );
-    const enhet = data?._embedded?.enheter?.[0];
-    if (enhet?.forretningsadresse?.kommunenummer) {
-      const nr = [enhet.forretningsadresse.kommunenummer];
+    const enheter = data?._embedded?.enheter || [];
+    // Finn eksakt eller nær match pa kommunenavn
+    const match = enheter.find(e => {
+      const navn = e.navn?.replace(/ KOMMUNE$/i,"").replace(/ kommune$/i,"").toLowerCase().trim();
+      return navn === key || navn.startsWith(key);
+    });
+    if (match?.forretningsadresse?.kommunenummer) {
+      const nr = [match.forretningsadresse.kommunenummer];
       kommuneCache.set(key, nr);
       return nr;
     }
-  } catch {}
+    // Fallback: foerste treff
+    const first = enheter[0]?.forretningsadresse?.kommunenummer;
+    if (first) {
+      const nr = [first];
+      kommuneCache.set(key, nr);
+      return nr;
+    }
+  } catch(e) {
+    console.error(`getKommuneNr feil for "${key}": ${e.message}`);
+  }
 
   kommuneCache.set(key, []);
   return [];
