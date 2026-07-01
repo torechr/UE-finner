@@ -222,11 +222,26 @@ async function brregSearchByKommune(kommuneNr, naceCodes, keywords, purposeKeywo
   // Ett samlet kall med kommaseparert naeringskode-liste, slik Brreg sitt API faktisk forventer
   // (eksempel fra dokumentasjonen: naeringskode=41.109,01.1). Tidligere ble det sendt ett
   // kall PER kode, noe som i kombinasjon med den lange organisasjonsform-listen kunne gi 400.
-  const nacePromise = naceCodes.length > 0
-    ? brregFetch(`https://data.brreg.no/enhetsregisteret/api/enheter?naeringskode=${naceCodes.join(",")}&kommunenummer=${kommuneNr}&size=100&konkurs=false&underAvvikling=false&organisasjonsform=AS,ENK,ANS,DA,SA,NUF,BA,STI,FLI`)
-        .then(data => data?._embedded?.enheter || [])
-        .catch(() => [])
-    : Promise.resolve([]);
+  // Brreg sorterer alfabetisk og har maks 100 per side.
+  // Vi henter inntil 3 sider (300 treff) for aa fange alle relevante selskaper
+  // uavhengig av hvor de havner alfabetisk (f.eks. "PER TRY AS" pa side 2).
+  async function fetchNacePages() {
+    if (naceCodes.length === 0) return [];
+    const baseUrl = `https://data.brreg.no/enhetsregisteret/api/enheter?naeringskode=${naceCodes.join(",")}&kommunenummer=${kommuneNr}&size=100&konkurs=false&underAvvikling=false&organisasjonsform=AS,ENK,ANS,DA,SA,NUF,BA,STI,FLI`;
+    const page0 = await brregFetch(`${baseUrl}&page=0`).catch(() => null);
+    const results = page0?._embedded?.enheter || [];
+    const total = page0?.page?.totalElements || 0;
+    if (total > 100) {
+      const page1 = await brregFetch(`${baseUrl}&page=1`).catch(() => null);
+      results.push(...(page1?._embedded?.enheter || []));
+    }
+    if (total > 200) {
+      const page2 = await brregFetch(`${baseUrl}&page=2`).catch(() => null);
+      results.push(...(page2?._embedded?.enheter || []));
+    }
+    return results;
+  }
+  const nacePromise = fetchNacePages();
 
   const keywordPromises = (keywords || []).map(kw =>
     brregFetch(`https://data.brreg.no/enhetsregisteret/api/enheter?navn=${encodeURIComponent(kw)}&kommunenummer=${kommuneNr}&size=20&konkurs=false&underAvvikling=false&organisasjonsform=AS,ENK,ANS,DA,SA,NUF,BA,STI,FLI`)
