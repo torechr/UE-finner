@@ -266,6 +266,7 @@ const STATUS_OPTIONS = ["","Kontaktet","Tilbud mottatt","Godkjent","Avvist"];
 const STATUS_CLASS = {"Kontaktet":"s-kontaktet","Tilbud mottatt":"s-tilbud","Godkjent":"s-godkjent","Avvist":"s-avvist"};
 
 let eqs=new Set(),selectedLocations=[],companiesData=[],farmersData=[],currentTab="companies",currentSource="",currentView="list";
+const knrLookup = {}; // kommunenavn (lowercase) -> kommunenummer
 let favourites=JSON.parse(localStorage.getItem("subfinder_favs")||"[]");
 let projects=JSON.parse(localStorage.getItem("subfinder_projects")||"{}");
 let currentProject="";
@@ -390,6 +391,8 @@ async function loadKommuner() {
       if (knr && navn) knrCache[navn] = knr;
     }
     localStorage.setItem("subfinder_kommuner", JSON.stringify({ts: Date.now(), data: knrCache}));
+    // Oppdater aktiv lookup-tabell for dropdown
+    Object.assign(knrLookup, knrCache);
     locationDataReady = true;
     console.log(`Kommuner lastet: ${enheter.length} fra Brreg`);
   } catch(e) {
@@ -439,7 +442,8 @@ function renderDropdown(items, q){
     const label = getLabel(m.item);
     const isCounty = m.item.includes("|");
     const highlighted = q ? label.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'), s=>`<strong>${s}</strong>`) : label;
-    html += `<div class="loc-item${isCounty?" loc-county":""}" data-idx="${i}" data-value="${getValue(m.item)}" data-label="${label}" onmousedown="selectLocation('${getValue(m.item)}','${label.replace(/'/g,"\\'")}')">
+    const itemKnr = knrLookup[label.toLowerCase()] || "";
+    html += `<div class="loc-item${isCounty?" loc-county":""}" data-idx="${i}" data-value="${getValue(m.item)}" data-label="${label}" onmousedown="selectLocation('${getValue(m.item)}','${label.replace(/'/g,"\\'")}','${itemKnr}')">
       ${highlighted}
     </div>`;
   });
@@ -452,14 +456,14 @@ function hideDropdown(){
   document.getElementById("locationDropdown").style.display = "none";
 }
 
-function selectLocation(value, label){
+function selectLocation(value, label, knr){
   // Ikke legg til duplikater
   if (selectedLocations.some(l => l.value === value)) {
     document.getElementById("locationInput").value = "";
     document.getElementById("locationDropdown").style.display = "none";
     return;
   }
-  selectedLocations.push({ value, label });
+  selectedLocations.push({ value, label, knr: knr || null });
   document.getElementById("locationInput").value = "";
   document.getElementById("locationDropdown").style.display = "none";
   renderChips();
@@ -540,7 +544,14 @@ async function doSearch(complete=false){
   companiesData=[];farmersData=[];
   try{
     const r=await fetch("/api/search",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({locations: selectedLocations.map(l=>l.value), equipments:[...eqs], complete})});
+      body:JSON.stringify({
+        locations: selectedLocations.map(l=>l.value),
+        kommunenummere: selectedLocations.flatMap(l => {
+          if (l.knr && l.knr.length === 4) return [l.knr]; // enkeltkommune
+          return []; // fylke — la backend slaa opp
+        }),
+        equipments:[...eqs], complete
+      })});
     const d=await r.json();
     if(d.error)throw new Error(d.error);
     companiesData=d.companies||[];
