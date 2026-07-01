@@ -370,8 +370,11 @@ module.exports = async (req, res) => {
       return res.json({ companies: [], source: "brreg" });
     }
 
-    // Enrich all companies - fetch manager for ALL (batched to avoid timeout)
-    const top = companies.slice(0, 100);
+    // Sorter paa ansatte foer vi kutter, slik at etablerte selskaper (som PER TRY AS med 27 ansatte)
+    // ikke faller ut naar mange kategorier er valgt samtidig og det er 300+ treff totalt.
+    const top = companies
+      .sort((a, b) => (b.antallAnsatte || 0) - (a.antallAnsatte || 0))
+      .slice(0, 150);
 
     // Batch dagligLeder fetches: 10 at a time to stay within timeout
     async function fetchAllManagers(list) {
